@@ -212,4 +212,7 @@ addEventListener('keydown', (e) => {
 export const setPage = (p) => go(p);
 let onClose = () => {};
 export function onPanelClose(fn) { onClose = fn; }
-export function closePanel() { el.hidden = true; current = null; onClose(); }
+export function closePanel() {
+  el.hidden = true; current = null; onClose();
+  if (matchMedia('(max-width: 759px)').matches) scrollTo({ top: 0, behavior: 'smooth' });   // back up to the shelves
+}

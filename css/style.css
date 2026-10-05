@@ -114,3 +114,30 @@ td.pct { font-size: 11px; color: var(--muted); }
 /* sector labels over the clusters */
 .sector-label { transform: translate(0, 5px); font-size: 12px; font-weight: 600; color: var(--ink); white-space: nowrap; }
 .sector-label span { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: 4px; }
+
+/* Phones and narrow windows: one scrolling page. Title, then the bookcase, then the readout, then the source line. */
+@media (max-width: 759px) {
+  #viz { position: relative; inset: auto; display: flex; flex-direction: column; overflow: visible; min-height: 100vh; }
+  #viz canvas { order: 1; touch-action: pan-y; }
+  .hud-top { position: static; order: 0; padding: 14px 16px 6px; }
+  .title { font-size: 18px; }
+  .sub { font-size: 13px; }
+  .tip { display: none !important; }
+  .sector-label { font-size: 11px; }
+  .sector-label span { font-size: 10px; }
+  .panel { order: 2; position: static; width: 100%; min-width: 0; max-width: none; overflow: visible;
+    border-left: 0; border-top: 1px solid var(--line); padding: 0 16px 28px; backdrop-filter: none; scroll-margin-top: 0;
+    min-height: 100svh; }   /* always tall enough to scroll to the top of the screen */
+  .panel header { top: 0; margin-top: 0; padding-top: 14px; }
+  .panel h2 { padding-right: 32px; }
+  .close { top: 8px; right: 0; }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs button { padding: 6px 10px 7px; flex: none; }
+  .kpis, .gap { flex-wrap: wrap; gap: 10px 20px; }
+  .foot { order: 3; position: static; padding: 12px 16px 20px; }
+  table { font-size: 11.5px; }
+  td, th { padding: 2px 3px; }
+  th { white-space: normal; }
+  .barcell { width: 72px; }
+  .grid td:first-child, .bars td:first-child, .ems td:first-child { overflow-wrap: anywhere; }
+}

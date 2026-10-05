@@ -10,7 +10,7 @@ The US economy in 2017 as a bookcase of 63 industries. Each sphere is sized by v
 - **S**: purchased services
 - **C**: carbon, an output
 
-Internal demo, Common Wealth / Green Planning Commission. Static site: `index.html` + `js/` + `data/`, built by `pipeline/`.
+Internal demo, Common Wealth / Green Planning Commission. Works on phones: the bookcase scrolls, and tapping a sphere opens its readout below. Static site: `index.html` + `js/` + `data/`, built by `pipeline/`.
 
 ## Sources (all 2017)
 

@@ -20,6 +20,9 @@ const TAG_PX = 64, TAG_FONT = 47, EYELET = 44, TAG_PAD = 18;   // card texture: 
 const TAG_FONT_CSS = `600 ${TAG_FONT}px system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif`;
 
 const root = document.getElementById('viz');
+// Phones and narrow windows: one scrolling page, bookcase on top, readout below it (see resize()).
+const mobileMQ = matchMedia('(max-width: 759px)');
+const isMobile = () => mobileMQ.matches;
 const tip = document.getElementById('tip');
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -171,8 +174,16 @@ function layout(b, aspect) {
     shelves.forEach((s) => { s.plank.scale.x = s.w; s.plank.position.set(s.x0 + s.w / 2, s.y - PLANK / 2, 0); });
   }
   const { W, H } = size;
-  const d = 1.08 * Math.max(H / 2, W / 2 / aspect) / Math.tan(THREE.MathUtils.degToRad(20));
-  camera.position.set(W / 2, H * 0.08, d);   // above the top shelf, so every plank is seen from above
+  // Desktop: a 40° lens from just above the top shelf. Phone: the bookcase is very tall, so a narrow 6° lens from far
+  // away, tilted 8° down: nearly flat, every plank seen from above at the same angle, and the bookcase fills the frame.
+  const flat = isMobile();
+  camera.fov = flat ? 6 : 40;
+  const d = (flat ? 1 : 1.08) * Math.max(H / 2, W / 2 / aspect) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const tilt = THREE.MathUtils.degToRad(8);
+  if (flat) camera.position.set(W / 2, -H / 2 + d * Math.sin(tilt), d * Math.cos(tilt));
+  else camera.position.set(W / 2, H * 0.08, d);   // above the top shelf, so every plank is seen from above
+  camera.near = d / 10; camera.far = d * 3;
+  camera.updateProjectionMatrix();
   controls.target.set(W / 2, -H / 2, 0);
   controls.update();
 }
@@ -187,11 +198,11 @@ const labels = shelves.map((c) => {
 });
 // Declutter: shelves are placed largest first; a label that would overlap one already shown is hidden.
 function placeLabels() {
-  const w = root.clientWidth, h = root.clientHeight, shown = [];
+  const cv = renderer.domElement, w = cv.clientWidth, h = cv.clientHeight, ox = cv.offsetLeft, oy = cv.offsetTop, shown = [];
   labels.forEach(({ c, el, at }) => {
     at.set(c.x0 + PAD * 0.5, c.y - PLANK, c.front).project(camera);
-    el.style.left = `${(at.x + 1) / 2 * w}px`;
-    el.style.top = `${(1 - at.y) / 2 * h}px`;
+    el.style.left = `${ox + (at.x + 1) / 2 * w}px`;
+    el.style.top = `${oy + (1 - at.y) / 2 * h}px`;
     const r = el.getBoundingClientRect();
     const clash = shown.some((o) => r.left < o.right + 4 && o.left < r.right + 4 && r.top < o.bottom && o.top < r.bottom);
     el.style.visibility = clash ? 'hidden' : 'visible';
@@ -210,12 +221,16 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme
 const ray = new THREE.Raycaster();
 const pickable = [...meshes, ...tags.map((t) => t.card)];
 const ptr = new THREE.Vector2();
-renderer.domElement.addEventListener('pointermove', (e) => {
+function pick(e) {
   const b = renderer.domElement.getBoundingClientRect();
   ptr.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1);
   ray.setFromCamera(ptr, camera);
   const first = ray.intersectObjects(pickable)[0]?.object ?? null;
-  const hit = first?.userData.owner ?? first;   // a tag stands for its sphere
+  return first?.userData.owner ?? first;   // a tag stands for its sphere
+}
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;      // no hover on touch screens
+  const hit = pick(e);
   if (hit !== hovered) { hovered = hit; applyTheme(); }
   if (hit) {
     const n = hit.userData;
@@ -231,7 +246,8 @@ let down = null;
 renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
-  if (hovered) select(hovered); else closePanel();
+  const hit = pick(e);
+  if (hit) select(hit); else if (!isMobile()) closePanel();   // on a phone, a stray tap on empty space keeps the readout
 });
 addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanel(); });
 onPanelClose(() => { selected = null; applyTheme(); resize(); });
@@ -239,11 +255,27 @@ onPanelClose(() => { selected = null; applyTheme(); resize(); });
 function select(mesh) {
   selected = mesh;
   applyTheme();
-  openPanel(mesh.userData, meta);
+  openPanel(mesh.userData, meta).then(() => {
+    if (isMobile()) document.getElementById('panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 // Fit the bookcase to the space left of the panel: re-shelve into the best number of bays, then frame it.
 function resize() {
+  if (isMobile()) {
+    // One or two bays; the canvas is as tall as the bookcase needs at full width, and the page scrolls through it.
+    const w = root.clientWidth, b = w < 520 ? 1 : 2, z = sizes.find((q) => q.b === b);
+    const h = Math.round(w * z.H / z.W * 1.03);   // 3% breathing room
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.clearViewOffset();
+    controls.enabled = false;                 // swipes scroll the page instead of turning the scene
+    layout(b, w / h);
+    document.querySelector('.foot').style.right = '';
+    camera.updateProjectionMatrix();
+    return;
+  }
+  controls.enabled = true;
   const w = root.clientWidth, h = root.clientHeight;
   renderer.setSize(w, h);
   camera.aspect = w / h;
@@ -257,6 +289,7 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
+mobileMQ.addEventListener('change', resize);
 // The panel's width follows its content, so refit the view whenever it changes (page switches included).
 new ResizeObserver(() => resize()).observe(document.getElementById('panel'));
 resize();
@@ -269,7 +302,9 @@ window.__viz = { nodes, shelves, meta, setPage,
     let ink = 0, colour = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40) { ink++; if (Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) > 40) colour++; }
     return { code: m.userData.code, emoji: m.userData.emoji, ink: ink / (c.width * c.height), colour: ink ? colour / ink : 0 }; }),
   tagPx: () => tags.map(({ card }) => { const a = card.localToWorld(new THREE.Vector3(0, -TAG_H / 2, 0)).project(camera), b = card.localToWorld(new THREE.Vector3(0, TAG_H / 2, 0)).project(camera);
-    return Math.hypot((a.x - b.x) * root.clientWidth / 2, (a.y - b.y) * root.clientHeight / 2); }),
+    const cv = renderer.domElement; return Math.hypot((a.x - b.x) * cv.clientWidth / 2, (a.y - b.y) * cv.clientHeight / 2); }),
   tags: () => tags.map(({ n }) => ({ code: n.code, x: n.x, y: n.y, r: n.r, tieX: n.tieX, tieY: n.tieY, w: n.tagW, sx: n.sx, sector: n.sector })), TAG: { H: TAG_H, ANGLE: TAG_ANGLE, STRING },
-  screenOf: (code) => { const v = meshes.find((m) => m.userData.code === code).position.clone().project(camera);
-    return [(v.x + 1) / 2 * root.clientWidth, (1 - v.y) / 2 * root.clientHeight]; }, select: (code) => select(meshes.find((m) => m.userData.code === code)) };
+  // where a sphere is in the viewport (client coordinates), for tests that click or tap it
+  screenOf: (code) => { const v = meshes.find((m) => m.userData.code === code).position.clone().project(camera), b = renderer.domElement.getBoundingClientRect();
+    return [b.left + (v.x + 1) / 2 * b.width, b.top + (1 - v.y) / 2 * b.height]; },
+  select: (code) => select(meshes.find((m) => m.userData.code === code)) };
