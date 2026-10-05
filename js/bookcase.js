@@ -30,7 +30,22 @@ const money = (m) => m >= 1e6 ? `$${(m / 1e6).toFixed(2)}tn` : `$${Math.round(m 
 const vaMax = industries[0].value_added;
 const measure = document.createElement('canvas').getContext('2d');
 measure.font = TAG_FONT;
-const nodes = industries.map((d) => ({ ...d, k: Math.sqrt(d.value_added / vaMax), tagW: Math.ceil(TAG_PAD_L + measure.measureText(d.short_name).width + TAG_PAD_R) }));
+const LINE_H = 14;                    // second line of a two-line tag
+// A long name can sit on two lines, split at the space nearest its middle (Alex's idea, 2026-10-05).
+function split(name) {
+  const mid = name.length / 2; let best = -1;
+  for (let i = 0; i < name.length; i++) if (name[i] === ' ' && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+  return best < 0 ? [name] : [name.slice(0, best), name.slice(best + 1)];
+}
+function setTags(breakAt) {          // names longer than breakAt characters go on two lines
+  nodes.forEach((n) => {
+    n.tagLines = n.short_name.length > breakAt ? split(n.short_name) : [n.short_name];
+    n.tagW = Math.ceil(TAG_PAD_L + Math.max(...n.tagLines.map((t) => measure.measureText(t).width)) + TAG_PAD_R);
+    n.tagH = TAG_H + LINE_H * (n.tagLines.length - 1);
+  });
+}
+const nodes = industries.map((d) => ({ ...d, k: Math.sqrt(d.value_added / vaMax) }));
+setTags(Infinity);
 const shelves = [...new Set(nodes.map((n) => n.sector))].map((sector) => {
   const members = nodes.filter((n) => n.sector === sector);   // already largest first
   return { sector, name: members[0].sector_name, members, va: members.reduce((t, n) => t + n.value_added, 0) };
@@ -42,17 +57,16 @@ const shelves = [...new Set(nodes.map((n) => n.sector))].map((sector) => {
 const LINE_GAP = 6;                   // between the planks of a wrapped shelf
 function arrange(bays, R, angle, maxW = Infinity) {
   const cos = Math.cos(angle), sin = Math.sin(angle);
-  const minDx = (TAG_H + 6) / sin;                      // parallel tags clear each other
   shelves.forEach((s) => {
     s.lines = [];
     let line = null;
     s.members.forEach((n) => {
       n.r = Math.max(1.5, R * n.k);
       n.tieDx = n.r * Math.sin(TIE); n.tieDy = n.r + n.r * Math.cos(TIE);        // tie point, from the sphere's foot
-      const reach = STRING + n.tagW, tagRight = n.tieDx + reach * cos + TAG_H / 2 * sin;
+      const reach = STRING + n.tagW, tagRight = n.tieDx + reach * cos + n.tagH / 2 * sin;
       const place = (ln) => {
         const prev = ln.members[ln.members.length - 1];
-        const lx = prev ? Math.max(ln.x + GAP + n.r, prev.lx + minDx) : PAD + n.r;
+        const lx = prev ? Math.max(ln.x + GAP + n.r, prev.lx + (prev.tagH / 2 + n.tagH / 2 + 6) / sin) : PAD + n.r;   // parallel tags clear each other
         return { lx, right: Math.max(lx + n.r, ln.right, lx + tagRight) };
       };
       let p = line && place(line);
@@ -60,7 +74,7 @@ function arrange(bays, R, angle, maxW = Infinity) {
         line = { members: [], x: PAD, right: 0, top: 0 }; s.lines.push(line); p = place(line);
       }
       n.lx = p.lx; line.x = n.lx + n.r; line.right = p.right;
-      line.top = Math.max(line.top, 2 * n.r, n.tieDy + reach * sin + TAG_H / 2 * cos);
+      line.top = Math.max(line.top, 2 * n.r, n.tieDy + reach * sin + n.tagH / 2 * cos);
       line.members.push(n); n.line = line;
     });
     s.w = Math.max(...s.lines.map((l) => l.right)) + PAD;
@@ -100,11 +114,26 @@ const R_MAX_DESKTOP = 46;             // above this the bookcase only gets talle
 function solve(availW, availH, mobile) {
   let pick;
   if (mobile) {
-    // One column, shelves wrap to the screen; the biggest sphere spans about a third of the width.
-    pick = { bays: 1, R: Math.min(0.12 * availW, 60), angle: ANGLE };
-    Object.assign(pick, arrange(1, pick.R, ANGLE, availW));
-    return pick;
+    // One column; a shelf wider than the screen wraps onto another plank. Search tag angle, two-line names and
+    // sphere size for the fewest planks; then, within 5% of the shortest page, the biggest spheres and shallowest tags.
+    const cands = [];
+    for (const breakAt of [Infinity, 20]) {
+      setTags(breakAt);
+      for (const deg of [55, 60, 65, 70, 75]) for (const frac of [0.12, 0.11, 0.10, 0.09, 0.08]) {
+        const R = Math.min(frac * availW, 60), angle = deg * Math.PI / 180, z = arrange(1, R, angle, availW);
+        cands.push({ bays: 1, R, angle, deg, breakAt, planks: shelves.reduce((t, s) => t + s.lines.length, 0), H: z.H });
+      }
+    }
+    const fewest = Math.min(...cands.map((c) => c.planks));
+    const pool = cands.filter((c) => c.planks === fewest);
+    const shortest = Math.min(...pool.map((c) => c.H));
+    const best = pool.filter((c) => c.H <= 1.05 * shortest)                    // within 5% of the shortest page:
+      .reduce((a, c) => (c.R > a.R || (c.R === a.R && c.deg < a.deg) ? c : a)); // the biggest spheres, then the shallowest tags
+    setTags(best.breakAt);
+    Object.assign(best, arrange(1, best.R, best.angle, availW));
+    return best;
   }
+  setTags(Infinity);                  // desktop: one-line tags
   // Desktop: fit the whole bookcase on screen if any arrangement can at a decent size; otherwise use the most bays
   // that keep spheres decent (tags at 45°, or 60° if that buys a bay), let the bookcase scroll, size spheres to width.
   const options = [];
@@ -151,9 +180,11 @@ function draw() {
       const g = el('g', { class: 'tag', 'data-code': n.code }, svg);
       el('line', { x1: tx, y1: ty, x2: tx + cos * (STRING + 3), y2: ty - sin * (STRING + 3), class: 'string' }, g);
       const card = el('g', { transform: `translate(${tx + cos * STRING} ${ty - sin * STRING}) rotate(${deg})` }, g);
-      el('rect', { x: 0, y: -TAG_H / 2, width: n.tagW, height: TAG_H, rx: TAG_H / 2, class: 'card' }, card);
+      el('rect', { x: 0, y: -n.tagH / 2, width: n.tagW, height: n.tagH, rx: TAG_H / 2, class: 'card' }, card);
       el('circle', { cx: 10, cy: 0, r: 3, class: 'eyelet' }, card);
-      el('text', { x: TAG_PAD_L, y: 0.5, class: 'tag-text', 'dominant-baseline': 'middle' }, card).textContent = n.short_name;
+      n.tagLines.forEach((t, i) => {
+        el('text', { x: TAG_PAD_L, y: 0.5 + (i - (n.tagLines.length - 1) / 2) * LINE_H, class: 'tag-text', 'dominant-baseline': 'middle' }, card).textContent = t;
+      });
     });
     s.members.forEach((n) => {
       const g = el('g', { class: 'ind', 'data-code': n.code, tabindex: 0, role: 'button', 'aria-label': `${n.name}, ${money(n.value_added)} value added` }, svg);
@@ -201,7 +232,10 @@ draw();
 
 // Hooks for the checks in _checks/ (geometry in page pixels, relative to the drawing).
 window.__viz = {
+  // explore phone layouts: planks and height for a given angle (degrees) and R
+  tryLayout: (deg, R, w, breakAt = Infinity) => { setTags(breakAt); const z = arrange(1, R, deg * Math.PI / 180, w); const out = { planks: shelves.reduce((t, s) => t + s.lines.length, 0), H: Math.round(z.H) }; setTags(Infinity); return out; },
   nodes, shelves, meta, setPage, select: (code) => select(code),
-  layout: () => ({ bays: layoutNow.bays, R: layoutNow.R, angle: layoutNow.angle, W: layoutNow.W, H: layoutNow.H, TAG_H, STRING }),
+  planks: () => shelves.map((s) => s.lines.length),
+  layout: () => ({ breakAt: layoutNow.breakAt, planks: shelves.reduce((t, s) => t + s.lines.length, 0), bays: layoutNow.bays, R: layoutNow.R, angle: layoutNow.angle, W: layoutNow.W, H: layoutNow.H, TAG_H, STRING }),
   screenOf: (code) => { const n = byCode.get(code), b = host.querySelector('svg').getBoundingClientRect(); return [b.left + n.x, b.top + n.y]; },
 };
