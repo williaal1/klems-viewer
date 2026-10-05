@@ -22,7 +22,7 @@
 .source { margin: var(--space-3) 0 0; max-width: none; }
 
 /* ── The bookcase (SVG, drawn in screen pixels) ── */
-.bookcase { display: block; overflow: visible; }
+.bookcase { display: block; overflow: visible; width: auto; max-width: none; height: auto; }   /* drawn at its own pixel size: the kit's .cw-chart and svg rules would stretch it */
 .bookcase .shelf-bg { fill: var(--color-panel); }
 .bookcase .plank { stroke: var(--color-rule); stroke-width: 2px; }
 .cw-chart .shelf-label { font-weight: 700; }
