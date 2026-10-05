@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KLEMS Viewer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js",
+      "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main id="viz" aria-label="The 63 KLEMS industries of the US economy, 2017, sized by value added">
+    <div class="hud hud-top">
+      <div class="title">KLEMS Viewer</div>
+      <div class="sub" id="sub">63 industries · 2017 · size = value added · click one for its production function</div>
+    </div>
+    <div class="hud tip" id="tip" hidden></div>
+    <aside id="panel" class="panel" hidden aria-label="Industry readout"></aside>
+    <div class="hud foot">Source: BEA-BLS Integrated Industry-Level Production Account (April 2025 release). Value added here is the production account's own measure (capital + labor compensation).</div>
+  </main>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
