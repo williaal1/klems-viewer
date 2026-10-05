@@ -73,12 +73,12 @@ function pageK(d) {
     <td class="num">${money(a.productive_stock_m)}</td><td class="num">${money(a.investment_m)}</td><td class="num">${pct(a.depreciation_rate)}</td><td class="num">${pct(a.share_of_capital_income)}</td></tr>`;
   return html + `
     <h3>Capital stock <span class="muted">· ${bn(all.productive_stock_bn)} productive stock</span></h3>
-    <table class="grid"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
+    <table class="grid wide"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
       <tbody>${broad.map((b) => brow(b)).join('')}${brow(all, 'total')}</tbody></table>
     <h4>Information processing equipment</h4>${sub(c.information_processing, 'Total information processing equipment')}
     <h4>Intellectual property</h4>${sub(c.intellectual_property, 'Total intellectual property products')}
     <h4>Every asset type <span class="muted">· ${c.assets.length}, largest stock first</span></h4>
-    <table class="grid collapsible collapsed"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
+    <table class="grid wide collapsible collapsed"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
       <tbody>${c.assets.map(arow).join('')}</tbody></table>
     ${c.assets.length > 10 ? `<button class="toggle" data-n="${c.assets.length}" data-top="10">Show all ${c.assets.length}</button>` : ''}
     <p class="src">BLS Total Factor Productivity, Capital Details, ${d.year}.</p>`;

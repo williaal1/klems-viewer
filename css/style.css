@@ -131,5 +131,14 @@ td.arrow { width: 16px; }
   table { font-size: var(--size-label); }
   td, th { padding: 3px var(--space-1); }
   th { white-space: normal; }
-  .grid td:first-child, .legend td:first-child, .ems td:first-child { overflow-wrap: anywhere; }
+  .grid td:first-child, .legend td:first-child, .ems td:first-child { overflow-wrap: break-word; }   /* break a word only if it can't fit */
+  /* Five-column capital tables: each asset's name on its own line, its four numbers in even columns beneath */
+  .grid.wide thead tr, .grid.wide tbody tr { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .grid.wide th:first-child { display: none; }
+  .grid.wide tbody tr { border-bottom: 1px solid var(--color-panel); padding: var(--space-1) 0; }
+  .grid.wide tbody td { border-bottom: 0; }
+  .grid.wide tbody td:first-child { grid-column: 1 / -1; padding-bottom: 0; }
+  .grid.wide tr.total { border-top: var(--border); }
+  .grid.wide tr.total td { border-top: 0; }
+  .grid.wide.collapsed tr.more { display: none; }
 }
