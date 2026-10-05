@@ -10,7 +10,10 @@ The US economy in 2017 as a bookcase of 63 industries. Each sphere is sized by v
 - **S**: purchased services
 - **C**: carbon, an output
 
-Internal demo, Common Wealth / Green Planning Commission. Works on phones: the bookcase scrolls, and tapping a sphere opens its readout below. Static site: `index.html` + `js/` + `data/`, built by `pipeline/`.
+Internal demo, Common Wealth / Green Planning Commission.
+- **Static site:** `index.html` + `js/` + `data/`, built by `pipeline/`.
+- **2D SVG, laid out in screen pixels,** so text stays crisp and the page scrolls natively on phones. On a phone, tapping a sphere opens its readout below the bookcase.
+- **Styled with the Common Wealth web kit** in `cw/`: tokens, base CSS and the CW monogram. The fonts are Archivo, Inter and JetBrains Mono, all SIL OFL 1.1, with licences in `cw/fonts/`.
 
 ## Sources (all 2017)
 

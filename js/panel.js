@@ -33,7 +33,7 @@ const SRC_PA = (d) => `<p class="src">BEA-BLS Integrated Production Account, ${d
 function overview(d, meta) {
   const p = d.production, go = p.gross_output;
   const stack = 'KLEMS'.split('').map((k) => `<i style="width:${(100 * p[k] / go).toFixed(2)}%;background:${FACTORS[k][1]}" title="${k}"></i>`).join('');
-  const row = (k) => `<tr class="go" data-page="${k}"><td><b class="chip" style="background:${FACTORS[k][1]}">${k}</b>${FACTORS[k][0]}</td>
+  const row = (k) => `<tr class="go" data-page="${k}"><td><b class="chip" data-f="${k}">${k}</b>${FACTORS[k][0]}</td>
     <td class="num">${money(p[k])}</td><td class="num muted">${pct(p[k] / go)}</td><td class="num arrow">›</td></tr>`;
   return `
     <div class="kpis">
@@ -44,7 +44,7 @@ function overview(d, meta) {
     <h3>Gross output, by what it pays for</h3>
     <div class="stack">${stack}</div>
     <table class="legend">${'KLEMS'.split('').map(row).join('')}
-      <tr class="go" data-page="C"><td><b class="chip" style="background:var(--c)">C</b>Carbon (an output)</td><td class="num">${(d.carbon.direct_t / 1e6).toFixed(1)} Mt</td><td class="num muted">CO₂e</td><td class="num arrow">›</td></tr>
+      <tr class="go" data-page="C"><td><b class="chip" data-f="C">C</b>Carbon (an output)</td><td class="num">${(d.carbon.direct_t / 1e6).toFixed(1)} Mt</td><td class="num muted">CO₂e</td><td class="num arrow">›</td></tr>
     </table>
     <p class="note">Value added = K + L. Gross output = K + L + E + M + S. Carbon is produced alongside the output, not paid for.</p>
     ${SRC_PA(d)}
@@ -169,8 +169,7 @@ function render() {
       <button class="close" aria-label="Close">×</button>
       <h2>${esc(d.name)}</h2>
       <div class="muted">BEA ${esc(d.code)}${d.naics_2017 ? ` · NAICS ${esc(d.naics_2017)}` : ''} · ${d.year}</div>
-      <nav class="tabs" role="tablist">${PAGES.map((t) => `<button role="tab" data-page="${t}" aria-selected="${t === page}"
-        ${t !== 'Overview' ? `style="--tab:${FACTORS[t][1]}"` : ''}>${t}</button>`).join('')}</nav>
+      <nav class="tabs" role="tablist">${PAGES.map((t) => `<button role="tab" data-page="${t}" aria-selected="${t === page}">${t}</button>`).join('')}</nav>
     </header>
     <div class="page">${body}</div>`;
   el.querySelector('.close').onclick = () => closePanel();
