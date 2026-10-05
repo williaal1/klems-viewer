@@ -48,7 +48,7 @@ function overview(d, meta) {
     </table>
     <p class="note">Value added = K + L. Gross output = K + L + E + M + S. Carbon is produced alongside the output, not paid for.</p>
     ${SRC_PA(d)}
-    ${d.notes.length ? `<h3>Notes</h3>${d.notes.map((n) => `<p class="note">${esc(n)}</p>`).join('')}` : ''}`;
+`;
 }
 
 function pageK(d) {
@@ -58,7 +58,7 @@ function pageK(d) {
     <h4>By type</h4>${bars(p.K_by_type, p.K, 'var(--k)')}
     <h4>By asset class</h4>${bars(p.K_by_asset_class, p.K, 'var(--k)')}
     ${SRC_PA(d)}`;
-  if (!c) return html + `<h3>Capital stock</h3><p class="note">No asset-level capital data: BLS capital details cover private industries only.</p>`;
+  if (!c) return html + `<h3>Capital stock</h3><p class="note">No asset-level capital data for this industry.</p>`;
   const order = ['Equipment', 'Structures', 'Intellectual property products', 'Rental residential capital', 'Inventories', 'Land'];
   const broad = order.map((a) => c.broad.find((b) => b.asset === a)).filter(Boolean);
   const all = c.broad.find((b) => b.asset === 'All assets');
@@ -81,7 +81,7 @@ function pageK(d) {
     <table class="grid collapsible collapsed"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
       <tbody>${c.assets.map(arow).join('')}</tbody></table>
     ${c.assets.length > 10 ? `<button class="toggle" data-n="${c.assets.length}" data-top="10">Show all ${c.assets.length}</button>` : ''}
-    <p class="src">BLS Total Factor Productivity, Capital Details (sector ${esc(c.bls_naics)}), ${d.year}. Stocks and investment in 2017 dollars (equal to current dollars in the base year). Depreciation is the wealth-stock rate.</p>`;
+    <p class="src">BLS Total Factor Productivity, Capital Details, ${d.year}.</p>`;
 }
 
 function pageL(d) {
@@ -90,7 +90,7 @@ function pageL(d) {
     <h3>Labor compensation <span class="muted">· ${money(p.L)}, ${pct(p.L / p.gross_output)} of gross output</span></h3>
     <h4>By education</h4>${bars(p.L_by_education, p.L, 'var(--l)')}
     ${SRC_PA(d)}`;
-  if (!l) return html + `<h3>Occupations</h3><p class="note">No occupation data: OEWS does not survey crop and animal production.</p>`;
+  if (!l) return html + `<h3>Occupations</h3><p class="note">No occupation data for this industry.</p>`;
   const TOP = 15;
   const side = (title, s) => `
     <div class="side">
@@ -107,10 +107,8 @@ function pageL(d) {
       <div><span class="muted">KLEMS labor compensation</span><b>${money(l.klems_labor_compensation_m)}</b></div>
       <div><span class="muted">Wages cover</span><b>${pct(l.oews_wage_bill_m / l.klems_labor_compensation_m, 0)}</b></div>
     </div>
-    <p class="note">The gap is benefits, the self-employed and other coverage differences: OEWS counts wages and salaries of employees only.</p>
     <div class="sides">${side('Supervisory', l.supervisory)}${side('Nonsupervisory', l.nonsupervisory)}</div>
-    <p class="note">Supervisory = all management occupations (SOC 11) plus first-line supervisors. Jobs in occupations OEWS suppresses are in the total but not in either column.</p>
-    <p class="src">BLS OEWS, May ${d.year}, national industry-specific estimates: ${l.oews_industries.map(esc).join(', ')}. n/p = not published (suppressed or top-coded).</p>`;
+    <p class="src">BLS OEWS, May ${d.year}, national industry-specific estimates.</p>`;
 }
 
 function pageEMS(d, k) {
@@ -127,14 +125,13 @@ function pageEMS(d, k) {
   return `
     <h3>${FACTORS[k][0]} <span class="muted">· bought from other industries</span></h3>
     <div class="kpis">
-      <div><span class="muted">Spent (BEA published)</span><b>${money(p[k])}</b></div>
+      <div><span class="muted">Spent</span><b>${money(p[k])}</b></div>
       <div><span class="muted">Share of gross output</span><b>${pct(p[k] / p.gross_output)}</b></div>
       <div><span class="muted">Share of intermediate inputs</span><b>${pct(p[k] / ii)}</b></div>
     </div>
-    <p class="note">The commodities below sum to <b>${money(listed)}</b>, ${pct(listed / p[k], 0)} of BEA's published figure. BEA sorts purchases into energy, materials and services at a finer level than it publishes, so a commodity-by-commodity split cannot match it exactly. Nothing here is scaled.</p>
     <table class="grid ems"><thead><tr><th>What it buys, by kind of industry that makes it</th><th>$</th><th>Share</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="3" class="muted">None listed.</td></tr>'}</tbody></table>
-    <p class="src">BEA Use table, 2017 detail benchmark (before redefinitions, purchasers' prices), grouped by BEA summary commodity and sector. Click a group to see its detailed commodities. Published totals: BEA-BLS Integrated Production Account.</p>`;
+    <p class="src">BEA Use table, 2017 detail benchmark (before redefinitions, purchasers' prices). Click a group to see its detailed commodities.</p>`;
 }
 
 const tonnes = (t) => t == null ? '–' : t >= 1e6 ? `${(t / 1e6).toFixed(1)} Mt` : t >= 1e3 ? `${Math.round(t / 1e3).toLocaleString()} kt` : `${Math.round(t)} t`;
@@ -161,7 +158,7 @@ function pageC(d) {
     <h4>Per dollar of output <span class="muted">· kg CO₂e</span></h4>
     <table class="bars">${per('Direct, in the industry itself', c.direct_kg_per_usd)}${per('Including its supply chain', c.supply_chain_kg_per_usd)}</table>
     <p class="note">${pct(upstream, 0)} of the emissions behind a dollar of this industry's output happen upstream, in the industries it buys from (at home and abroad).</p>
-    <p class="src">EPA USEEIO v2.5 (model kingbird-17): 2017 greenhouse-gas emissions attributed to industries, IPCC AR6 100-year warming potentials${c.epa_sectors.length > 1 ? `, summed over EPA sectors ${c.epa_sectors.map(esc).join(', ')}` : ''}. Households' own emissions (cars, home heating) are not attributed to any industry. Per-dollar figures use EPA's own 2017 output.</p>`;
+    <p class="src">EPA USEEIO v2.5 (model kingbird-17): 2017 greenhouse-gas emissions, IPCC AR6 100-year warming potentials.</p>`;
 }
 
 function render() {

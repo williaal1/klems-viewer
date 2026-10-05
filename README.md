@@ -75,6 +75,44 @@ BEA assigns E, M and S at an unpublished finer level, so this is an approximatio
 | Emissions per dollar | Direct `D`, and with supply chain `N` (kg CO₂e per $ of EPA output), averaged over a merged industry by output. Supply-chain figures are never summed across industries. |
 | Short names, emoji | `pipeline/short_names.csv`, `pipeline/emoji.csv` (editable) |
 
+## Caveats (kept here, not on the pages)
+
+**Value added**
+- Sphere size uses the production account's value added (capital + labor compensation), not GDP-by-industry value added: the 63 sum to $19,762bn vs $19,612bn GDP.
+  - Government comes out larger than in GDP. State & local is $2,352bn vs $1,689bn, with large capital compensation.
+  - Trade and other industries come out smaller; the gaps track their taxes on production.
+  - BEA's documentation does not state the cause.
+
+**K: capital**
+- BLS capital details cover private industries only, so Federal and State & local have no asset-level capital.
+- Stocks and investment are in 2017 dollars (equal to current dollars in the base year). Depreciation is the wealth-stock rate.
+- BLS's own capital-cost estimate differs from the production account's K and is not shown.
+
+**L: labor**
+- OEWS counts wages and salaries of employees only. KLEMS labor compensation also covers benefits and the self-employed, so "wages cover" is below 100% (33–98%, median 61%).
+- Occupations OEWS suppresses are in the total jobs but in neither column.
+- `n/p` = wage not published (suppressed or top-coded; the source data cannot tell which).
+- Supervisory is an occupation-based definition (above). It is narrower than BLS's CES "production and nonsupervisory" split: 9.9% of jobs here vs 17.6% of private jobs in CES, May 2017.
+- Farms have no occupation data; OEWS does not survey crop and animal production.
+- `713` and `721` use OEWS's private + local government row, so a few local-government jobs are also counted in State & local (+0.2% on the private total).
+
+**E / M / S: purchases**
+- Every dollar row is a published BEA Use-table cell, or a sum of cells. Nothing is estimated or allocated.
+- The approximation is only which page a commodity sits on (rules above). So a page's listed total can differ from BEA's published E, M or S for the industry.
+  - Economy-wide: E +1.0%, M +1.0%, S −0.7%.
+  - Within 5% for 49 (E), 44 (M) and 42 (S) of 63 industries.
+  - Largest misses: chemicals' E (66% of published), air transport's M (199%).
+- Across the three pages, the totals equal BEA's published E + M + S within 0.2%.
+- "Share" is a share of the page's listed total.
+
+**C: carbon**
+- These are emissions EPA attributes to industries. Households' own emissions (cars, home heating) are not in any industry: industry CO₂ is 73% of EIA's total 2017 energy CO₂.
+- Per-dollar figures use EPA's own 2017 output, which differs from the production account's gross output for a few industries (State & local 0.80×, retail 1.13×).
+- Public power is in the government-enterprise industries (`GSLE`, `GFE` → State & local, Federal), not in Utilities.
+
+**Codes**
+- BEA lists `511` as NAICS 511 and 516; 516 does not exist after 2007.
+
 ## Rebuild
 
 `pipeline/build_industries.py` and `pipeline/build_readout.py` read from a local data library that is not in this repo. Each stops on a failed check: identities, totals, crosswalk coverage.
