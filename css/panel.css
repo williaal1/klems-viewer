@@ -1,4 +1,6 @@
-/* KLEMS Viewer: the readout panel (js/panel.js), in the Forces of Production style (fop/css). Factor colours are app roles mapped onto the house palette. */
+/* KLEMS Viewer: the readout panel (js/panel.js), in the Forces of Production style (fop/css). Factor colours are app roles mapped onto the house palette.
+   Built as an instrument readout: every figure in --font-mono (tabular), every label in --font-sans, square tiles and bars, ruled tables.
+   Georgia (--font-label) is not used here at all. */
 
 :root {
   --k: var(--series-1);           --k-ink: var(--color-on-dark);     /* dark teal */
@@ -11,19 +13,24 @@
 
 /* ── Readout panel: a raised surface ── */
 .panel { flex: none; width: fit-content; min-width: 400px; max-width: 760px; overflow-y: auto; background: var(--color-surface);
-  border-left: 1px solid var(--color-rule); padding: 0 var(--space-5) var(--space-6); }
+  border-left: var(--stroke-axis) solid var(--color-rule); padding: 0 var(--space-5) var(--space-6); }
 .panel[hidden] { display: none; }
 .panel header { position: sticky; top: 0; background: var(--color-surface); padding-top: var(--space-4); z-index: 1; }
 .panel h2 { font-size: var(--size-h2); margin: 0 var(--space-7) var(--space-1) 0; }
 .panel .muted { color: var(--color-text); }   /* the grey is for labels and captions only, never data */
-.panel header > .muted { font-family: var(--font-label); font-size: var(--size-label); color: var(--color-text-muted); }
+.panel .code { font-family: var(--font-mono); font-size: var(--size-label); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }   /* BEA 325 · NAICS 325 · 2017 */
+.panel .fig, .panel .side-sum b { font-family: var(--font-mono); font-weight: var(--weight-heading); }   /* a figure inside a sentence */
 
 /* Section heading: the figure frame's treatment (short UPPERCASE title, detail on a quieter line beneath) */
 .panel h3 { font-size: var(--size-h3); font-weight: var(--weight-heading); text-transform: uppercase; letter-spacing: var(--tracking-caps);
   line-height: var(--line-tight); margin: var(--space-6) 0 var(--space-3); border-top: 1px solid var(--color-rule); padding-top: var(--space-4); }
-.panel h4 { font-family: var(--font-label); font-size: var(--size-small); font-weight: 700; line-height: var(--line-tight); margin: var(--space-4) 0 var(--space-2); }
+.panel h4 { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.06em;
+  line-height: var(--line-tight); margin: var(--space-4) 0 var(--space-2); }
+.panel .ix { font-family: var(--font-mono); font-weight: var(--weight-heading); font-size: var(--size-label); letter-spacing: 0; color: var(--color-accent);
+  margin-right: var(--space-1); }   /* K.1, K.2 ... the section's number on the instrument */
 .panel .sub { display: block; margin-top: var(--space-1); font-family: var(--font-sans); font-size: var(--size-small); font-weight: var(--weight-body);
   text-transform: none; letter-spacing: 0; line-height: 1.35; color: var(--color-text-muted); }
+.panel .sub .fig { color: var(--color-text); }
 .page h3:first-child, .page .kpis:first-child { margin-top: var(--space-4); }
 .page h3:first-child { border-top: 0; padding-top: 0; }
 
@@ -32,38 +39,39 @@
   background: var(--color-surface); color: var(--color-accent); font: 400 20px/1 var(--font-sans); cursor: pointer; }
 .close:hover { background: var(--color-highlight); }
 
-/* Page tabs: the kit's segmented control, stretched across the panel so all seven always fit */
+/* Page tabs: the kit's segmented control, stretched across the panel so all seven always fit; labels in mono, like a switch bank */
 .tabs { display: flex; margin: var(--space-3) 0 var(--space-2); border: 1px solid var(--color-accent); border-radius: var(--radius); }
-.tabs button { flex: 1 1 0; min-width: 0; min-height: 36px; padding: 0 var(--space-1); font: inherit; font-size: var(--size-small); font-weight: var(--weight-strong);
-  color: var(--color-accent); background: transparent; border: 0; cursor: pointer; }
+.tabs button { flex: 1 1 0; min-width: 0; min-height: 36px; padding: 0 var(--space-1); font: inherit; font-family: var(--font-mono); font-size: var(--size-small); font-weight: var(--weight-strong);
+  text-transform: uppercase; color: var(--color-accent); background: transparent; border: 0; cursor: pointer; }
 .tabs button[data-page="Overview"] { flex: 2.4 1 0; }
 .tabs button + button { border-left: 1px solid var(--color-accent); }
 .tabs button:hover { background: var(--color-highlight); }
 .tabs button[aria-selected="true"] { background: var(--color-accent); color: var(--color-on-dark); }
 
-/* Headline numbers: the kit's .fop-stat (value large in the accent, label beneath in the label face) */
-.kpis, .gap { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); margin: var(--space-3) 0; }
-.kpis div, .gap div { display: flex; flex-direction: column-reverse; gap: var(--space-1); }
-.kpis span, .gap span { font-family: var(--font-label); font-size: var(--size-label); color: var(--color-text-muted); }
-.kpis b, .gap b { font-family: var(--font-sans); font-weight: var(--weight-heading); font-size: var(--size-h2); line-height: 1; color: var(--color-accent); }
+/* Headline numbers: a row of ruled square tiles (1px rule showing through the gaps), label above in small UPPERCASE sans, the value below in mono */
+.kpis, .gap { display: flex; flex-wrap: wrap; gap: 1px; margin: var(--space-3) 0; background: var(--color-rule); border: 1px solid var(--color-rule); }
+.kpis div, .gap div { flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--color-surface); }
+.panel .kpis span, .panel .gap span { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-heading); text-transform: uppercase; letter-spacing: 0.06em;
+  line-height: var(--line-tight); color: var(--color-text-muted); }
+.kpis b, .gap b { font-family: var(--font-mono); font-weight: var(--weight-heading); font-size: var(--size-h2); line-height: 1; letter-spacing: -0.02em; color: var(--color-accent); white-space: nowrap; }
 
 /* Factor bar and chips */
-.stack { display: flex; height: 20px; border-radius: var(--radius); overflow: hidden; margin: var(--space-2) 0 var(--space-3); }
+.stack { display: flex; height: 20px; border: 1px solid var(--color-rule); overflow: hidden; margin: var(--space-2) 0 var(--space-3); }
 .stack i { display: block; height: 100%; }
-.chip { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: var(--radius); margin-right: var(--space-2);
-  font-family: var(--font-label); font-size: var(--size-label); font-weight: 700; }
+.chip { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 0; margin-right: var(--space-2);
+  font-family: var(--font-mono); font-size: var(--size-label); font-weight: 700; }
 .chip[data-f="K"] { background: var(--k); color: var(--k-ink); } .chip[data-f="L"] { background: var(--l); color: var(--l-ink); }
 .chip[data-f="E"] { background: var(--e); color: var(--e-ink); } .chip[data-f="M"] { background: var(--m); color: var(--m-ink); }
 .chip[data-f="S"] { background: var(--s); color: var(--s-ink); } .chip[data-f="C"] { background: var(--c); color: var(--c-ink); }
 
-/* Tables: label-face headers over an axis-weight rule, hairline gridlines, numbers right-aligned in the label face */
+/* Tables: small UPPERCASE sans headers over an axis-weight rule, hairline row lines, figures right-aligned in mono */
 table { width: 100%; border-collapse: collapse; font-size: var(--size-small); font-weight: var(--weight-heading); }
 td, th { padding: var(--space-1) var(--space-2); vertical-align: top; text-align: left; }
-th { font-family: var(--font-label); font-size: var(--size-label); font-weight: 400; color: var(--color-text-muted); white-space: nowrap;
-  border-bottom: var(--stroke-axis) solid var(--color-rule); }
+th { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--color-text-muted); white-space: nowrap; border-bottom: var(--stroke-axis) solid var(--color-rule); }
 td { border-bottom: var(--stroke-grid) solid var(--color-grid); }
 td:first-child, th:first-child { padding-left: 0; }
-.num { text-align: right; white-space: nowrap; font-family: var(--font-label); font-variant-numeric: tabular-nums; }
+.num, .na { text-align: right; white-space: nowrap; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 th.num, .grid th:not(:first-child) { text-align: right; }
 .grid tr.total td { border-top: var(--stroke-axis) solid var(--color-rule); font-weight: var(--weight-strong); }
 .grid.sub td:first-child { padding-left: var(--space-4); }
@@ -80,19 +88,20 @@ td.arrow { width: 16px; }
   color: var(--color-accent); background: transparent; border: 1px solid var(--color-accent); border-radius: var(--radius); cursor: pointer; }
 .toggle:hover { background: var(--color-highlight); }
 .na { color: var(--color-text); }
-.note, .src { font-family: var(--font-label); font-size: var(--size-label); margin: var(--space-2) 0; }
+.note, .src { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-heading); margin: var(--space-2) 0; }
 .src { color: var(--color-text-muted); }
 .panel .note, .panel .src { width: 0; min-width: 100%; max-width: none; }   /* wrap to the tables' width, never widen the panel */
 .sides { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-top: var(--space-2); }
-.side-sum { font-family: var(--font-label); font-size: var(--size-label); margin-bottom: var(--space-2); }
+.side-sum { font-family: var(--font-sans); font-size: var(--size-label); margin-bottom: var(--space-2); }
 .occ td:first-child { width: 60%; }
 
 /* E / M / S purchase tables */
-.ems tr.band td { font-family: var(--font-label); font-size: var(--size-label); font-weight: 700; background: var(--fop-light-teal); padding-top: var(--space-2); }
+.ems tr.band td { font-size: var(--size-label); font-weight: var(--weight-strong); background: var(--fop-light-teal); padding-top: var(--space-2); }
+.ems tr.band td:first-child { font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.04em; }
 .ems tr.band td:first-child { padding-left: var(--space-2); }
 .ems tr.grp td:first-child { padding-left: 22px; position: relative; }
 .ems tr.grp.can-open { cursor: pointer; }
-.ems tr.grp.can-open td:first-child::before { content: '+'; position: absolute; left: 8px; font-family: var(--font-label); }
+.ems tr.grp.can-open td:first-child::before { content: '+'; position: absolute; left: 8px; font-family: var(--font-mono); }
 .ems tr.grp.can-open.open td:first-child::before { content: '−'; }
 .ems tr.grp.can-open:hover td { background: var(--color-highlight); }
 .ems tr.item td { font-size: var(--size-label); }
@@ -106,7 +115,8 @@ td.arrow { width: 16px; }
   .barcell { width: 72px; }
   table { font-size: var(--size-label); }
   td, th { padding: 3px var(--space-1); }
-  th { white-space: normal; }
+  th { white-space: normal; letter-spacing: 0; }   /* UPPERCASE headers are wider: drop the tracking so five-word tables still fit */
+  .grid.sub td:first-child { padding-left: 0; }   /* the indent costs width the mono figures now need */
   .grid td:first-child, .legend td:first-child, .ems td:first-child { overflow-wrap: break-word; }   /* break a word only if it can't fit */
   /* Five-column capital tables: each asset's name on its own line, its four numbers in even columns beneath */
   .grid.wide thead tr, .grid.wide tbody tr { display: grid; grid-template-columns: repeat(4, 1fr); }
