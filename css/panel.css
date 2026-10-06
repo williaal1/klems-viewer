@@ -127,4 +127,10 @@ td.arrow { width: 16px; }
   .grid.wide tr.total { border-top: var(--stroke-axis) solid var(--color-rule); }
   .grid.wide tr.total td { border-top: 0; }
   .grid.wide.collapsed tr.more { display: none; }
+  /* The three-column capital sub-tables restack the same way (mono figures no longer fit beside the name at 360px) */
+  .grid.sub thead tr, .grid.sub tbody tr { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .grid.sub th:first-child { display: none; }
+  .grid.sub tbody tr { border-bottom: var(--stroke-grid) solid var(--color-grid); padding: var(--space-1) 0; }
+  .grid.sub tbody td { border-bottom: 0; }
+  .grid.sub tbody td:first-child { grid-column: 1 / -1; padding-bottom: 0; }
 }
