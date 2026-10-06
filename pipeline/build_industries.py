@@ -63,6 +63,26 @@ assert set(short.index) == set(w.index), 'short_names.csv must have exactly the 
 emoji = pd.read_csv(os.path.join(HERE, 'emoji.csv'), dtype=str).set_index('code').emoji
 assert set(emoji.index) == set(w.index), 'emoji.csv must have exactly the 63 industries'
 
+# Compact NAICS label for the sphere (Alex, 2026-10-06: "label the spheres with their NAICS code"). Consecutive codes
+# become a range ("311-312" -> "311–312"); a set with gaps shows its first code and "+" ("3364, 3365, 3366, 3369" ->
+# "3364+"), so a label never claims codes the industry doesn't cover. Government has no NAICS code: BEA's own code.
+def naics_label(code, naics):
+    if not isinstance(naics, str) or not naics.strip():
+        return {'GF': 'GOV F', 'GSL': 'GOV S&L'}[code]
+    nums = []
+    for part in naics.replace(' ', '').split(','):
+        a, _, b = part.partition('-')
+        lo, hi = int(a), int(b) if b else int(a)
+        if b and len(b) < len(a):                       # e.g. "5412-19" style shorthand (not in this data, but safe)
+            hi = int(a[:len(a) - len(b)] + b)
+        nums += list(range(lo, hi + 1))
+    nums = sorted(set(nums))
+    if len(nums) == 1:
+        return str(nums[0])
+    if nums == list(range(nums[0], nums[-1] + 1)) and len(str(nums[0])) == len(str(nums[-1])):
+        return f'{nums[0]}–{nums[-1]}'
+    return f'{nums[0]}+'
+
 industries = []
 for code, r in w.sort_values('Value Added', ascending=False).iterrows():
     naics = names.loc[code, 'naics_2017']
@@ -72,6 +92,7 @@ for code, r in w.sort_values('Value Added', ascending=False).iterrows():
         'short_name': short[code],
         'emoji': emoji[code],
         'naics_2017': None if pd.isna(naics) else str(naics),
+        'naics_label': naics_label(code, None if pd.isna(naics) else str(naics)),
         'value_added': float(r['Value Added']),
         'sector': sector(code),
         'sector_name': SECTORS[sector(code)],
