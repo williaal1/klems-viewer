@@ -1,5 +1,5 @@
 // The bookcase, in 2D: one shelf per kind of industry, spheres resting on it largest to smallest, left to right,
-// each with an emoji and a specimen tag. Drawn as SVG in screen pixels (Forces of Production kit rule: chart text never
+// each carrying its NAICS code and a technical callout. Drawn as SVG in screen pixels (Forces of Production kit rule: chart text never
 // scales), so text stays crisp and readable at any size and the page scrolls natively on phones.
 import { openPanel, closePanel, onPanelClose, setPage } from './panel.js';
 
@@ -7,17 +7,22 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 const MOBILE = matchMedia('(max-width: 759px)');
 
 // Fixed, in screen pixels.
-// The tag font is whatever the kit's label tokens resolve to (--font-label at --size-label), read from CSS so the
-// width measured on the canvas below always matches the tag text drawn by the stylesheet.
-const TAG_FONT = (() => {
-  const probe = document.createElement('span');
-  probe.style.cssText = 'position:absolute;visibility:hidden;font-weight:400;font-family:var(--font-label);font-size:var(--size-label)';
-  document.body.appendChild(probe);
-  const cs = getComputedStyle(probe), font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-  probe.remove();
-  return font;
-})();
-const TAG_H = 24, TAG_PAD_L = 20, TAG_PAD_R = 10, STRING = 10;   // card height, eyelet and right padding, string
+// Fonts are read from the stylesheet: a hidden SVG with the same classes as the real marks is resolved, so the width
+// measured on the canvas below always matches the text drawn by css/frame.css.
+function fontOf(cls) {
+  const svg = document.createElementNS(SVGNS, 'svg'), t = document.createElementNS(SVGNS, 'text');
+  svg.setAttribute('class', 'fop-chart bookcase'); svg.style.cssText = 'position:absolute;visibility:hidden';
+  t.setAttribute('class', cls); svg.appendChild(t); document.body.appendChild(svg);
+  const cs = getComputedStyle(t), f = { weight: cs.fontWeight, size: cs.fontSize, family: cs.fontFamily };
+  svg.remove();
+  return f;
+}
+const tagFont = fontOf('tag-text'), codeFont = fontOf('code');
+const TAG_FONT = `${tagFont.weight} ${tagFont.size} ${tagFont.family}`;
+const CODE_FONT_1PX = `${codeFont.weight} 100px ${codeFont.family}`;   // measured at 100px, scaled per sphere
+const TAG_H = 22, TAG_PAD_L = 8, TAG_PAD_R = 8, STRING = 10;   // callout height, side padding, leader line
+const CODE_FIT = 1.6, CODE_MIN = 8, CODE_MAX = 16;             // sphere code: width as a multiple of the radius; hidden under CODE_MIN px
+const TICK = 5;                                                // plank tick under each sphere's centre
 const TIE = Math.PI / 4;              // where the string leaves the sphere, from straight up
 const GAP = 6;                        // between neighbouring spheres
 const PAD = 14;                       // inside each shelf, left and right
@@ -32,14 +37,14 @@ const host = document.getElementById('bookcase');
 const tip = document.getElementById('tip');
 
 const { meta, industries } = await (await fetch('data/industries.json')).json();
-await document.fonts.load(TAG_FONT);
+await document.fonts.load(TAG_FONT); await document.fonts.load(CODE_FONT_1PX);
 await document.fonts.ready;
 
 const money = (m) => m >= 1e6 ? `$${(m / 1e6).toFixed(2)}tn` : `$${Math.round(m / 1e3).toLocaleString()}bn`;
 const vaMax = industries[0].value_added;
 const measure = document.createElement('canvas').getContext('2d');
 measure.font = TAG_FONT;
-const LINE_H = 16;                    // second line of a two-line tag
+const LINE_H = 14;                    // second line of a two-line tag
 // A long name can sit on two lines, split at the space nearest its middle (Alex's idea, 2026-10-05).
 function split(name) {
   const mid = name.length / 2; let best = -1;
@@ -48,12 +53,13 @@ function split(name) {
 }
 function setTags(breakAt) {          // names longer than breakAt characters go on two lines
   nodes.forEach((n) => {
-    n.tagLines = n.short_name.length > breakAt ? split(n.short_name) : [n.short_name];
+    n.tagLines = n.tagName.length > breakAt ? split(n.tagName) : [n.tagName];
     n.tagW = Math.ceil(TAG_PAD_L + Math.max(...n.tagLines.map((t) => measure.measureText(t).width)) + TAG_PAD_R);
     n.tagH = TAG_H + LINE_H * (n.tagLines.length - 1);
   });
 }
-const nodes = industries.map((d) => ({ ...d, k: Math.sqrt(d.value_added / vaMax) }));
+const codeW = (t) => { measure.font = CODE_FONT_1PX; const w = measure.measureText(t).width / 100; measure.font = TAG_FONT; return w; };
+const nodes = industries.map((d) => ({ ...d, k: Math.sqrt(d.value_added / vaMax), tagName: d.short_name.toUpperCase() }));
 setTags(Infinity);
 const shelves = [...new Set(nodes.map((n) => n.sector))].map((sector) => {
   const members = nodes.filter((n) => n.sector === sector);   // already largest first
@@ -177,34 +183,39 @@ function draw() {
   const L = layoutNow = solve(availW, availH, mobile);
   const deg = -L.angle * 180 / Math.PI, cos = Math.cos(L.angle), sin = Math.sin(L.angle);
   const svg = el('svg', { width: Math.ceil(L.W), height: Math.ceil(L.H), viewBox: `0 0 ${Math.ceil(L.W)} ${Math.ceil(L.H)}`, class: 'fop-chart bookcase', role: 'group' });
-  shelves.forEach((s) => {
-    s.lines.forEach((l) => el('line', { x1: s.x, x2: s.x + s.cw, y1: l.base + PLANK / 2, y2: l.base + PLANK / 2, class: 'plank' }, svg));
+  shelves.forEach((s, i) => {
+    s.lines.forEach((l) => {
+      el('line', { x1: s.x, x2: s.x + s.cw, y1: l.base + PLANK / 2, y2: l.base + PLANK / 2, class: 'plank' }, svg);
+      l.members.forEach((n) => el('line', { x1: n.x, x2: n.x, y1: l.base + PLANK, y2: l.base + PLANK + TICK, class: 'tick' }, svg));   // ruler ticks under each sphere's centre
+    });
     const t = el('text', { x: s.x + PAD, y: s.base + PLANK + 19, class: 'shelf-label' }, svg);
-    t.textContent = s.name;
+    el('tspan', { class: 'shelf-idx' }, t).textContent = String(i + 1).padStart(2, '0');
+    el('tspan', { dx: 8 }, t).textContent = s.name.toUpperCase();
     el('tspan', { class: 'shelf-value', dx: 8 }, t).textContent = money(s.va);
-    // tags first, so spheres (and their emoji) sit on top of the strings
+    // tags first, so spheres (and their codes) sit on top of the leader lines
     s.members.forEach((n) => {
       const tx = n.x + n.tieDx, ty = n.base - n.tieDy;
       const g = el('g', { class: 'tag', 'data-code': n.code }, svg);
-      el('line', { x1: tx, y1: ty, x2: tx + cos * (STRING + 3), y2: ty - sin * (STRING + 3), class: 'string' }, g);
+      el('line', { x1: tx, y1: ty, x2: tx + cos * STRING, y2: ty - sin * STRING, class: 'string' }, g);
       const card = el('g', { transform: `translate(${tx + cos * STRING} ${ty - sin * STRING}) rotate(${deg})` }, g);
       el('rect', { x: 0, y: -n.tagH / 2, width: n.tagW, height: n.tagH, class: 'card' }, card);
-      el('circle', { cx: 10, cy: 0, r: 3, class: 'eyelet' }, card);
       n.tagLines.forEach((t, i) => {
         el('text', { x: TAG_PAD_L, y: 0.5 + (i - (n.tagLines.length - 1) / 2) * LINE_H, class: 'tag-text', 'dominant-baseline': 'middle' }, card).textContent = t;
       });
     });
     s.members.forEach((n) => {
-      const g = el('g', { class: 'ind', 'data-code': n.code, tabindex: 0, role: 'button', 'aria-label': `${n.name}, ${money(n.value_added)} value added` }, svg);
+      const g = el('g', { class: 'ind', 'data-code': n.code, tabindex: 0, role: 'button', 'aria-label': `${n.name}, NAICS ${n.naics_label}, ${money(n.value_added)} value added` }, svg);
       if (selected === n.code) g.classList.add('selected');
       el('circle', { cx: n.x, cy: n.y, r: n.r, class: 'sphere' }, g);
-      if (n.r >= 7) el('text', { x: n.x, y: n.y, class: 'emoji', style: `font-size:${(1.05 * n.r).toFixed(1)}px`, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g).textContent = n.emoji;
+      const fs = Math.min(CODE_MAX, CODE_FIT * n.r / codeW(n.naics_label));   // fitted to the sphere; hidden when too small to read
+      if (fs >= CODE_MIN) el('text', { x: n.x, y: n.y, class: 'code', style: `font-size:${fs.toFixed(1)}px`, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g).textContent = n.naics_label;
     });
   });
   host.replaceChildren(svg);
 }
 
 // ---------- interaction ----------
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const byCode = new Map(nodes.map((n) => [n.code, n]));
 const owner = (e) => e.target.closest?.('[data-code]')?.dataset.code;
 host.addEventListener('click', (e) => { const c = owner(e); if (c) select(c); });
@@ -215,7 +226,7 @@ host.addEventListener('pointermove', (e) => {
   if (!c) { tip.hidden = true; return; }
   host.querySelector(`.ind[data-code="${CSS.escape(c)}"]`)?.classList.add('hover');
   const n = byCode.get(c);
-  tip.innerHTML = `<div class="fop-tooltip__value">${n.name}</div><div class="fop-tooltip__label">${n.sector_name}</div><div>${money(n.value_added)} value added · ${(100 * n.value_added / meta.total_value_added).toFixed(1)}%</div>`;
+  tip.innerHTML = `<div class="fop-tooltip__value">${esc(n.name)}</div><div class="fop-tooltip__label">NAICS <span class="num">${esc(n.naics_label)}</span> · ${esc(n.sector_name)}</div><div><span class="num">${money(n.value_added)}</span> value added · <span class="num">${(100 * n.value_added / meta.total_value_added).toFixed(1)}%</span></div>`;
   tip.style.left = `${e.clientX + 14}px`; tip.style.top = `${e.clientY + 14}px`; tip.hidden = false;
 });
 host.addEventListener('pointerleave', () => { tip.hidden = true; host.querySelectorAll('.ind.hover').forEach((g) => g.classList.remove('hover')); });

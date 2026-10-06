@@ -9,30 +9,37 @@
 #app { display: flex; height: calc(100vh - var(--masthead-h)); }
 .shelves-pane { flex: 1; min-width: 0; overflow: auto; padding: var(--space-5) var(--gutter) var(--space-4); }
 .intro h1 { font-size: var(--size-h2); margin: 0 0 var(--space-2); }
-.intro-sub { margin: 0 0 var(--space-4); font-family: var(--font-label); font-size: var(--size-label); color: var(--color-text-muted); }
+.intro-sub { margin: 0 0 var(--space-4); font-family: var(--font-mono); font-size: var(--size-label); color: var(--color-text-muted); }
 #bookcase { width: 100%; }
 .source { margin: var(--space-3) 0 0; max-width: none; }
 .fop-footer { margin-top: 0; }
 .fop-footer__inner { max-width: none; }          /* full-width like the masthead */
 
-/* ── The bookcase (SVG, drawn in screen pixels) ── */
+/* ── The bookcase (SVG, drawn in screen pixels): a measuring instrument. Flat dark-teal spheres carrying NAICS codes in
+   mono, square technical callouts, shelves indexed 01, 02 ... with ticks on the plank under each sphere. ── */
 .bookcase { display: block; overflow: visible; width: auto; max-width: none; height: auto; }   /* drawn at its own pixel size: the kit's svg rule would stretch it */
 .bookcase text { font-weight: 400; }
 .bookcase .plank { stroke: var(--color-rule); stroke-width: 2px; }
-.bookcase .shelf-label { fill: var(--color-text); font-weight: 700; }
-.bookcase .shelf-value { fill: var(--color-text-muted); font-weight: 400; }
+.bookcase .tick { stroke: var(--color-rule); stroke-width: 1px; }
+.bookcase .shelf-label { fill: var(--color-text); font-family: var(--font-sans); font-size: 12px; font-weight: var(--weight-strong); }
+.bookcase .shelf-idx { fill: var(--color-text-muted); font-family: var(--font-mono); font-weight: var(--weight-strong); }
+.bookcase .shelf-value { fill: var(--color-text-muted); font-family: var(--font-mono); font-weight: 400; }
 .bookcase .string { stroke: var(--fop-dark-gray); stroke-width: 1px; }
-.bookcase .card { fill: var(--color-surface); stroke: var(--fop-dark-gray); stroke-width: 1px; rx: var(--radius); }
-.bookcase .eyelet { fill: var(--color-bg); stroke: var(--fop-dark-gray); stroke-width: 1px; }
-.bookcase .tag-text { fill: var(--fop-dark-gray); }
-.bookcase .sphere { fill: var(--fop-mint); stroke: var(--fop-dark-gray); stroke-width: 1px; }
+.bookcase .card { fill: var(--color-surface); stroke: var(--fop-dark-gray); stroke-width: 1px; }
+/* Tag text: uppercased in JS (canvas measureText ignores text-transform); no letter-spacing, so the canvas width is exact.
+   js/bookcase.js reads this rule's font to measure, so size and weight are set here only. */
+.bookcase .tag-text { fill: var(--fop-dark-gray); font-family: var(--font-sans); font-size: 12px; font-weight: var(--weight-strong); }
+.bookcase .sphere { fill: var(--fop-dark-teal); stroke: none; }
+.bookcase .code { fill: var(--color-on-dark); font-family: var(--font-mono); font-weight: var(--weight-strong); pointer-events: none; }
 .bookcase .ind, .bookcase .tag { cursor: pointer; }
-.bookcase .ind.hover .sphere { fill: var(--fop-light-mint); }
-.bookcase .ind.selected .sphere { fill: var(--fop-dark-teal); }
+.bookcase .ind.hover .sphere { fill: var(--fop-medium-teal); }
+.bookcase .ind.selected .sphere { fill: var(--fop-mint); }
+.bookcase .ind.selected .code { fill: var(--color-on-bright); }
 .bookcase .ind:focus { outline: none; }
-.bookcase .ind:focus-visible .sphere { stroke: var(--color-accent); stroke-width: 3px; }
-.bookcase text.emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; pointer-events: none; }
-#tip { position: fixed; z-index: 10; max-width: 280px; }
+.bookcase .ind:focus-visible .sphere { stroke: var(--fop-orange); stroke-width: 3px; }
+#tip { position: fixed; z-index: 10; max-width: 280px; border-radius: 0; }
+#tip .fop-tooltip__label { font-family: var(--font-sans); }
+#tip .num { font-family: var(--font-mono); }
 
 /* ── Phones and narrow windows ── */
 @media (max-width: 759px) {
