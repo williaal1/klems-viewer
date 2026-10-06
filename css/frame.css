@@ -1,32 +1,37 @@
-/* KLEMS Viewer: page frame and the bookcase (SVG drawn in screen pixels). Owned by js/bookcase.js's markup and index.html. */
+/* KLEMS Viewer: page frame and the bookcase (SVG drawn in screen pixels). Owned by js/bookcase.js's markup and index.html.
+   Colours and type come from the Forces of Production kit tokens (fop/css/fop-tokens.css). */
 
 /* ── Page frame ── */
-.cw-masthead__inner { display: flex; align-items: center; gap: var(--space-4); min-height: var(--nav-height); padding: 0 var(--gutter); }
-.masthead-title { font-family: var(--font-label); font-size: var(--size-label-lg); font-weight: var(--weight-label-strong); }
-#app { display: flex; height: calc(100vh - var(--nav-height)); }
+:root { --masthead-h: 65px; }                      /* kit masthead: 40px bug + 2 x 12px padding + 1px rule */
+.fop-masthead { height: var(--masthead-h); }
+.fop-masthead__inner { max-width: none; }         /* the viewer is full-width: align with the pane below */
+.masthead-title { font-size: var(--size-h3); font-weight: var(--weight-strong); padding-left: var(--space-4); border-left: var(--border); line-height: var(--line-tight); }
+#app { display: flex; height: calc(100vh - var(--masthead-h)); }
 .shelves-pane { flex: 1; min-width: 0; overflow: auto; padding: var(--space-5) var(--gutter) var(--space-4); }
 .intro h1 { font-size: var(--size-h2); margin: 0 0 var(--space-2); }
-.intro-sub { margin: 0 0 var(--space-4); }
+.intro-sub { margin: 0 0 var(--space-4); font-family: var(--font-label); font-size: var(--size-label); color: var(--color-text-muted); }
 #bookcase { width: 100%; }
 .source { margin: var(--space-3) 0 0; max-width: none; }
+.fop-footer { margin-top: 0; }
+.fop-footer__inner { max-width: none; }          /* full-width like the masthead */
 
 /* ── The bookcase (SVG, drawn in screen pixels) ── */
-.bookcase { display: block; overflow: visible; width: auto; max-width: none; height: auto; }   /* drawn at its own pixel size: the kit's .cw-chart and svg rules would stretch it */
-.bookcase .shelf-bg { fill: var(--color-panel); }
+.bookcase { display: block; overflow: visible; width: auto; max-width: none; height: auto; }   /* drawn at its own pixel size: the kit's svg rule would stretch it */
+.bookcase text { font-weight: 400; }
 .bookcase .plank { stroke: var(--color-rule); stroke-width: 2px; }
-.cw-chart .shelf-label { font-weight: 700; }
-.cw-chart .shelf-value { font-weight: var(--weight-label); }
-.bookcase .string { stroke: var(--color-rule); stroke-width: 1px; }
-.bookcase .card { fill: var(--cw-white); stroke: var(--color-rule); stroke-width: 1px; }
-.bookcase .eyelet { fill: var(--cw-white); stroke: var(--color-rule); stroke-width: 1px; }
-.cw-chart .tag-text { font-weight: var(--weight-label-strong); }
-.bookcase .sphere { fill: var(--color-accent); stroke: var(--cw-black); stroke-width: 1px; }   /* black ring: green on white is 2.32:1 */
+.bookcase .shelf-label { fill: var(--color-text); font-weight: 700; }
+.bookcase .shelf-value { fill: var(--color-text-muted); font-weight: 400; }
+.bookcase .string { stroke: var(--fop-dark-gray); stroke-width: 1px; }
+.bookcase .card { fill: var(--color-surface); stroke: var(--fop-dark-gray); stroke-width: 1px; rx: var(--radius); }
+.bookcase .eyelet { fill: var(--color-bg); stroke: var(--fop-dark-gray); stroke-width: 1px; }
+.bookcase .tag-text { fill: var(--fop-dark-gray); }
+.bookcase .sphere { fill: var(--fop-mint); stroke: var(--fop-dark-gray); stroke-width: 1px; }
 .bookcase .ind, .bookcase .tag { cursor: pointer; }
-.bookcase .ind.hover .sphere { fill: var(--cw-green-2); }
-.bookcase .ind.selected .sphere { fill: var(--cw-black); }
+.bookcase .ind.hover .sphere { fill: var(--fop-light-mint); }
+.bookcase .ind.selected .sphere { fill: var(--fop-dark-teal); }
 .bookcase .ind:focus { outline: none; }
-.bookcase .ind:focus-visible .sphere { stroke: var(--color-focus); stroke-width: 3px; }
-.cw-chart text.emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; pointer-events: none; }
+.bookcase .ind:focus-visible .sphere { stroke: var(--color-accent); stroke-width: 3px; }
+.bookcase text.emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; pointer-events: none; }
 #tip { position: fixed; z-index: 10; max-width: 280px; }
 
 /* ── Phones and narrow windows ── */

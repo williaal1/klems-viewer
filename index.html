@@ -11,9 +11,12 @@
   <link rel="stylesheet" href="css/panel.css">
 </head>
 <body>
-  <header class="cw-masthead">
-    <div class="cw-masthead__inner">
-      <span class="cw-masthead__home"><img class="cw-masthead__logo" src="cw/assets/cw-monogram-white.svg" alt="Common Wealth"></span>
+  <header class="fop-masthead">
+    <div class="fop-masthead__inner">
+      <span class="fop-masthead__home">
+        <img class="fop-masthead__bug" src="fop/assets/union-bug-dark-teal.png" alt="Forces of Production">
+        <img class="fop-masthead__wordmark" src="fop/assets/wordmark-dark-teal.png" alt="">
+      </span>
       <span class="masthead-title">KLEMS Viewer</span>
     </div>
   </header>
@@ -21,14 +24,23 @@
     <section class="shelves-pane" aria-label="The 63 industries of the US economy in 2017, on shelves by kind of industry">
       <div class="intro">
         <h1>The US economy, 2017</h1>
-        <p class="cw-label intro-sub">63 industries · size = value added · select one for its production function</p>
+        <p class="intro-sub">63 industries · size = value added · select one for its production function</p>
       </div>
       <div id="bookcase"></div>
-      <p class="cw-label source">Source: BEA-BLS Integrated Industry-Level Production Account (April 2025 release).</p>
+      <p class="fop-figure__source source">Source: BEA-BLS Integrated Industry-Level Production Account (April 2025 release) | Forces of Production</p>
     </section>
     <aside id="panel" class="panel" hidden aria-label="Industry readout"></aside>
   </main>
-  <div id="tip" class="cw-tooltip" hidden></div>
+  <div id="tip" class="fop-tooltip" hidden></div>
+  <footer class="fop-footer">
+    <div class="fop-footer__inner">
+      <span>Forces of Production · a newsletter from Common Wealth</span>
+      <span class="fop-footer__logos">
+        <img src="fop/assets/cw-logo-dark-gray.png" alt="Common Wealth">
+        <img src="fop/assets/union-bug-dark-teal.png" alt="Forces of Production">
+      </span>
+    </div>
+  </footer>
   <script type="module" src="js/bookcase.js"></script>
 </body>
 </html>

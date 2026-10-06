@@ -1,5 +1,5 @@
 // The bookcase, in 2D: one shelf per kind of industry, spheres resting on it largest to smallest, left to right,
-// each with an emoji and a specimen tag. Drawn as SVG in screen pixels (Common Wealth kit rule: chart text never
+// each with an emoji and a specimen tag. Drawn as SVG in screen pixels (Forces of Production kit rule: chart text never
 // scales), so text stays crisp and readable at any size and the page scrolls natively on phones.
 import { openPanel, closePanel, onPanelClose, setPage } from './panel.js';
 
@@ -7,8 +7,17 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 const MOBILE = matchMedia('(max-width: 759px)');
 
 // Fixed, in screen pixels.
-const TAG_FONT = '400 12px "JetBrains Mono"';
-const TAG_H = 22, TAG_PAD_L = 20, TAG_PAD_R = 10, STRING = 10;   // card height, eyelet and right padding, string
+// The tag font is whatever the kit's label tokens resolve to (--font-label at --size-label), read from CSS so the
+// width measured on the canvas below always matches the tag text drawn by the stylesheet.
+const TAG_FONT = (() => {
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;font-weight:400;font-family:var(--font-label);font-size:var(--size-label)';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe), font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  probe.remove();
+  return font;
+})();
+const TAG_H = 24, TAG_PAD_L = 20, TAG_PAD_R = 10, STRING = 10;   // card height, eyelet and right padding, string
 const TIE = Math.PI / 4;              // where the string leaves the sphere, from straight up
 const GAP = 6;                        // between neighbouring spheres
 const PAD = 14;                       // inside each shelf, left and right
@@ -30,7 +39,7 @@ const money = (m) => m >= 1e6 ? `$${(m / 1e6).toFixed(2)}tn` : `$${Math.round(m 
 const vaMax = industries[0].value_added;
 const measure = document.createElement('canvas').getContext('2d');
 measure.font = TAG_FONT;
-const LINE_H = 14;                    // second line of a two-line tag
+const LINE_H = 16;                    // second line of a two-line tag
 // A long name can sit on two lines, split at the space nearest its middle (Alex's idea, 2026-10-05).
 function split(name) {
   const mid = name.length / 2; let best = -1;
@@ -167,9 +176,8 @@ function draw() {
   const availH = mobile ? Infinity : Math.max(320, pane.clientHeight - (host.offsetTop - pane.offsetTop) - pane.querySelector('.source').offsetHeight - 24);
   const L = layoutNow = solve(availW, availH, mobile);
   const deg = -L.angle * 180 / Math.PI, cos = Math.cos(L.angle), sin = Math.sin(L.angle);
-  const svg = el('svg', { width: Math.ceil(L.W), height: Math.ceil(L.H), viewBox: `0 0 ${Math.ceil(L.W)} ${Math.ceil(L.H)}`, class: 'cw-chart bookcase', role: 'group' });
+  const svg = el('svg', { width: Math.ceil(L.W), height: Math.ceil(L.H), viewBox: `0 0 ${Math.ceil(L.W)} ${Math.ceil(L.H)}`, class: 'fop-chart bookcase', role: 'group' });
   shelves.forEach((s) => {
-    el('rect', { x: s.x, y: s.y, width: s.cw, height: s.ch, class: 'shelf-bg' }, svg);
     s.lines.forEach((l) => el('line', { x1: s.x, x2: s.x + s.cw, y1: l.base + PLANK / 2, y2: l.base + PLANK / 2, class: 'plank' }, svg));
     const t = el('text', { x: s.x + PAD, y: s.base + PLANK + 19, class: 'shelf-label' }, svg);
     t.textContent = s.name;
@@ -180,7 +188,7 @@ function draw() {
       const g = el('g', { class: 'tag', 'data-code': n.code }, svg);
       el('line', { x1: tx, y1: ty, x2: tx + cos * (STRING + 3), y2: ty - sin * (STRING + 3), class: 'string' }, g);
       const card = el('g', { transform: `translate(${tx + cos * STRING} ${ty - sin * STRING}) rotate(${deg})` }, g);
-      el('rect', { x: 0, y: -n.tagH / 2, width: n.tagW, height: n.tagH, rx: TAG_H / 2, class: 'card' }, card);
+      el('rect', { x: 0, y: -n.tagH / 2, width: n.tagW, height: n.tagH, class: 'card' }, card);
       el('circle', { cx: 10, cy: 0, r: 3, class: 'eyelet' }, card);
       n.tagLines.forEach((t, i) => {
         el('text', { x: TAG_PAD_L, y: 0.5 + (i - (n.tagLines.length - 1) / 2) * LINE_H, class: 'tag-text', 'dominant-baseline': 'middle' }, card).textContent = t;
@@ -207,7 +215,7 @@ host.addEventListener('pointermove', (e) => {
   if (!c) { tip.hidden = true; return; }
   host.querySelector(`.ind[data-code="${CSS.escape(c)}"]`)?.classList.add('hover');
   const n = byCode.get(c);
-  tip.innerHTML = `<div class="cw-tooltip__value">${n.name}</div><div>${n.sector_name}</div><div>${money(n.value_added)} value added · ${(100 * n.value_added / meta.total_value_added).toFixed(1)}%</div>`;
+  tip.innerHTML = `<div class="fop-tooltip__value">${n.name}</div><div class="fop-tooltip__label">${n.sector_name}</div><div>${money(n.value_added)} value added · ${(100 * n.value_added / meta.total_value_added).toFixed(1)}%</div>`;
   tip.style.left = `${e.clientX + 14}px`; tip.style.top = `${e.clientY + 14}px`; tip.hidden = false;
 });
 host.addEventListener('pointerleave', () => { tip.hidden = true; host.querySelectorAll('.ind.hover').forEach((g) => g.classList.remove('hover')); });
