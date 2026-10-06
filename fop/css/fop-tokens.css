@@ -1,0 +1,124 @@
+/* Forces of Production — design tokens for web apps. First cut, 2026-09-30.
+ *
+ * Every colour, typeface and size an FoP app uses is defined here. App code
+ * reads these custom properties (see js/fop-tokens.js); it never hard-codes a value.
+ *
+ * Sources:
+ *   Colours — Visualization Library/Work/Forces of Production/Brand/brand-spec.md
+ *             (the chart engine's brand_colors), which match page 2 of
+ *             "forces of production brand docs.pdf".
+ *   Type, line weights — page 4 of the brand PDF (heading 32px, subheading 24px,
+ *             labels 18px, axis 2px #333333, gridlines 0.5px #777777).
+ *   Anything marked PROVISIONAL is Claude's first-cut choice, awaiting Alex.
+ */
+
+:root {
+  /* ── Brand palette (exact values from brand-spec.md) ── */
+  --fop-dark-teal: #0c425b;
+  --fop-medium-teal: #105c7e;
+  --fop-light-teal: #c9e9f8;
+  --fop-mint: #00c0a3;
+  --fop-light-mint: #a0ecd0;
+  --fop-very-light-mint: #e4f9f4;
+  --fop-coral: #fd676a;
+  --fop-light-coral: #ffa69e;
+  --fop-very-light-coral: #fff1f0;
+  --fop-orange: #f19953;
+  --fop-light-orange: #f6bd8e;
+  --fop-very-light-orange: #fadec6;
+  --fop-dark-gray: #333333;
+  --fop-medium-gray: #777777;
+  --fop-light-gray: #f5f5f5;
+  --fop-aux-gray: #aaaaaa;            /* brand-spec "auxiliary neutral" */
+
+  /* ── Roles (what app code should use) ── */
+  --color-bg: var(--fop-light-gray);  /* never white: brand rule */
+  --color-surface: #ffffff;           /* PROVISIONAL: raised panels and cards */
+  --color-text: var(--fop-dark-gray);
+  --color-text-muted: var(--fop-medium-gray); /* labels 13px+ only: 4.1:1 on bg */
+  --color-accent: var(--fop-dark-teal);       /* links, primary buttons, focus */
+  --color-accent-hover: var(--fop-medium-teal);
+  --color-rule: var(--fop-dark-gray);
+  --color-grid: var(--fop-medium-gray);
+  --color-positive: var(--fop-mint);
+  --color-negative: var(--fop-coral);
+  --color-highlight: var(--fop-very-light-mint);
+  --color-recession: rgba(255, 166, 158, 0.3); /* light coral at alpha 0.3 */
+
+  /* Text on filled marks. The brand spec says white on coral/orange/mint, but
+   * that measures 2.2–2.9:1, below the 4.5:1 web minimum. PROVISIONAL default:
+   * dark text on those three; white on the teals and the two grays. */
+  --color-on-dark: #ffffff;
+  --color-on-bright: var(--fop-dark-gray);
+
+  /* ── Series order (brand_series_colors) ── */
+  --series-1: var(--fop-dark-teal);
+  --series-2: var(--fop-mint);
+  --series-3: var(--fop-coral);
+  --series-4: var(--fop-orange);
+  --series-5: var(--fop-medium-teal);
+  --series-6: var(--fop-light-mint);
+  --series-7: var(--fop-light-coral);
+  --series-8: var(--fop-light-orange);
+  --series-aggregate: var(--fop-medium-gray);
+
+  /* Diverging and sequential scales (brand-spec heatmap scales) */
+  --scale-div-low: var(--fop-coral);
+  --scale-div-mid: #ece9e5;
+  --scale-div-high: var(--fop-dark-teal);
+  --scale-seq-1: var(--fop-light-teal);
+  --scale-seq-2: var(--fop-light-orange);   /* brand-spec lists a "mid" without a value; PROVISIONAL */
+  --scale-seq-3: var(--fop-orange);
+  --scale-seq-4: var(--fop-coral);
+
+  /* ── Type ──
+   * Brand faces: Neue Haas Unica (headings Regular, body Light) and New Spirit
+   * (labels, chart numbers). Both are commercial; web licences unknown.
+   * PROVISIONAL: system stacks that need no font files. Swap here when licensed. */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-label: Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+
+  --weight-body: 300;       /* brand: Unica Light for body */
+  --weight-heading: 400;    /* brand: Unica Regular for headings */
+  --weight-strong: 500;
+
+  --size-h1: 2rem;          /* 32px, brand heading */
+  --size-h2: 1.5rem;        /* 24px, brand subheading */
+  --size-h3: 1.125rem;
+  --size-body: 1.0625rem;   /* 17px, PROVISIONAL */
+  --size-small: 0.875rem;
+  --size-label: 0.8125rem;  /* 13px on screen; brand's 18px is for 2400px figures */
+  --line-body: 1.55;
+  --line-tight: 1.2;
+  --tracking-caps: 0.02em;
+
+  /* ── Lines (brand PDF page 4, scaled to screen) ── */
+  --stroke-axis: 1.5px;
+  --stroke-grid: 0.5px;
+  --stroke-series: 2px;
+  --dot-series: 4px;        /* radius of line-chart point markers */
+
+  /* ── Space and layout (PROVISIONAL) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --measure: 68ch;          /* max line length for prose */
+  --page-max: 1200px;
+  --gutter: 16px;
+  --radius: 2px;            /* the brand is square-edged; keep corners nearly sharp */
+  --border: 1px solid var(--fop-dark-gray);
+
+  /* ── Motion ── */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --duration: 200ms;
+}
+
+@media (min-width: 720px) {
+  :root { --gutter: 32px; }
+}

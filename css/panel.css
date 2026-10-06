@@ -1,6 +1,4 @@
-/* KLEMS Viewer, on the Common Wealth web kit (cw/css). Colours, type and spacing come from kit tokens only;
- * no raw colour values in this file. Factor colours below are app roles mapped onto the CW palette
- * (Claude's provisional mapping, 2026-10-05). */
+/* KLEMS Viewer: the readout panel (js/panel.js). Factor colours are app roles mapped onto the house palette. */
 
 :root {
   --k: var(--cw-blue);         --k-ink: var(--color-on-dark);
@@ -10,35 +8,6 @@
   --s: var(--cw-dark-purple);  --s-ink: var(--color-on-dark);
   --c: var(--cw-black);        --c-ink: var(--color-on-dark);
 }
-
-/* ── Page frame ── */
-.cw-masthead__inner { display: flex; align-items: center; gap: var(--space-4); min-height: var(--nav-height); padding: 0 var(--gutter); }
-.masthead-title { font-family: var(--font-label); font-size: var(--size-label-lg); font-weight: var(--weight-label-strong); }
-#app { display: flex; height: calc(100vh - var(--nav-height)); }
-.shelves-pane { flex: 1; min-width: 0; overflow: auto; padding: var(--space-5) var(--gutter) var(--space-4); }
-.intro h1 { font-size: var(--size-h2); margin: 0 0 var(--space-2); }
-.intro-sub { margin: 0 0 var(--space-4); }
-#bookcase { width: 100%; }
-.source { margin: var(--space-3) 0 0; max-width: none; }
-
-/* ── The bookcase (SVG, drawn in screen pixels) ── */
-.bookcase { display: block; overflow: visible; width: auto; max-width: none; height: auto; }   /* drawn at its own pixel size: the kit's .cw-chart and svg rules would stretch it */
-.bookcase .shelf-bg { fill: var(--color-panel); }
-.bookcase .plank { stroke: var(--color-rule); stroke-width: 2px; }
-.cw-chart .shelf-label { font-weight: 700; }
-.cw-chart .shelf-value { font-weight: var(--weight-label); }
-.bookcase .string { stroke: var(--color-rule); stroke-width: 1px; }
-.bookcase .card { fill: var(--cw-white); stroke: var(--color-rule); stroke-width: 1px; }
-.bookcase .eyelet { fill: var(--cw-white); stroke: var(--color-rule); stroke-width: 1px; }
-.cw-chart .tag-text { font-weight: var(--weight-label-strong); }
-.bookcase .sphere { fill: var(--color-accent); stroke: var(--cw-black); stroke-width: 1px; }   /* black ring: green on white is 2.32:1 */
-.bookcase .ind, .bookcase .tag { cursor: pointer; }
-.bookcase .ind.hover .sphere { fill: var(--cw-green-2); }
-.bookcase .ind.selected .sphere { fill: var(--cw-black); }
-.bookcase .ind:focus { outline: none; }
-.bookcase .ind:focus-visible .sphere { stroke: var(--color-focus); stroke-width: 3px; }
-.cw-chart text.emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; pointer-events: none; }
-#tip { position: fixed; z-index: 10; max-width: 280px; }
 
 /* ── Readout panel ── */
 .panel { flex: none; width: fit-content; min-width: 400px; max-width: 760px; overflow-y: auto; background: var(--color-bg);
@@ -119,11 +88,8 @@ td.arrow { width: 16px; }
 .ems tr.item td { font-size: var(--size-label); }
 .ems tr.item td:first-child { padding-left: 36px; }
 
-/* ── Phones and narrow windows: one scrolling page ── */
+/* ── Phones and narrow windows ── */
 @media (max-width: 759px) {
-  #app { display: block; height: auto; }
-  .shelves-pane { overflow: visible; padding: var(--space-4) var(--gutter); }
-  .intro h1 { font-size: var(--size-h3); }
   .panel { width: 100%; min-width: 0; max-width: none; overflow: visible; border-left: 0; border-top: var(--border);
     padding: 0 var(--gutter) var(--space-6); min-height: 100svh; }   /* tall enough to scroll to the top of the screen */
   .sides { grid-template-columns: 1fr; }
