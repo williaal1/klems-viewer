@@ -1,107 +1,129 @@
-/* KLEMS Viewer: the readout panel (js/panel.js), in the Forces of Production style (fop/css). Factor colours are app roles mapped onto the house palette.
-   Built as an instrument readout: every figure in --font-mono (tabular), every label in --font-sans, square tiles and bars, ruled tables.
-   Georgia (--font-label) is not used here at all. */
+/* KLEMS Viewer: the readout panel (js/panel.js), in the Forces of Production style (fop/css).
+   Each section is a small newsletter figure, as in the FoP chart library: "FIG K.1: TITLE" in UPPERCASE sans, a sentence-case subtitle,
+   the content, a source line ending "| Forces of Production". Titles and column heads are sans (--font-sans); every number and label
+   is the serif label face (--font-label). Tables take the house table: dark-teal title band with a white UPPERCASE title, light-mint
+   column heads, hairline row rules. Bars are flat fills with a thin #333 outline. Factor colours are app roles on the house palette. */
 
 :root {
-  --k: var(--series-1);           --k-ink: var(--color-on-dark);     /* dark teal */
-  --l: var(--series-2);           --l-ink: var(--color-on-bright);   /* mint */
-  --e: var(--series-3);           --e-ink: var(--color-on-bright);   /* coral */
-  --m: var(--series-4);           --m-ink: var(--color-on-bright);   /* orange */
-  --s: var(--series-5);           --s-ink: var(--color-on-dark);     /* medium teal */
-  --c: var(--fop-dark-gray);      --c-ink: var(--color-on-dark);
+  --k: var(--series-1);           /* capital: dark teal */
+  --l: var(--series-2);           /* labour: mint */
+  --e: var(--series-4);           /* energy: orange */
+  --m: var(--series-3);           /* materials: coral */
+  --s: var(--series-5);           /* purchased services: medium teal */
+  --c: var(--fop-dark-gray);      /* carbon: dark gray */
 }
 
-/* ── Readout panel: a raised surface ── */
-.panel { flex: none; width: fit-content; min-width: 400px; max-width: 760px; overflow-y: auto; background: var(--color-surface);
-  border-left: var(--stroke-axis) solid var(--color-rule); padding: 0 var(--space-5) var(--space-6); }
+/* ── Readout panel: figures on the house ground ── */
+.panel { flex: none; width: fit-content; min-width: 400px; max-width: 760px; overflow-y: auto; background: var(--color-bg);
+  border-left: var(--stroke-axis) solid var(--color-rule); padding: 0 var(--space-5) var(--space-6); font-family: var(--font-label); }
 .panel[hidden] { display: none; }
-.panel header { position: sticky; top: 0; background: var(--color-surface); padding-top: var(--space-4); z-index: 1; }
-.panel h2 { font-size: var(--size-h2); margin: 0 var(--space-7) var(--space-1) 0; }
+.panel header { position: sticky; top: 0; background: var(--color-bg); padding-top: var(--space-4); z-index: 1; }
+.panel h2 { font-size: var(--size-h3); font-weight: var(--weight-heading); text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  line-height: var(--line-tight); margin: 0 var(--space-7) var(--space-1) 0; }
 .panel .muted { color: var(--color-text); }   /* the grey is for labels and captions only, never data */
-.panel .code { font-family: var(--font-mono); font-size: var(--size-label); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }   /* BEA 325 · NAICS 325 · 2017 */
-.panel .fig, .panel .side-sum b { font-family: var(--font-mono); font-weight: var(--weight-heading); }   /* a figure inside a sentence */
+.panel .code { font-family: var(--font-label); font-size: var(--size-label); color: var(--color-text-muted); }   /* BEA 325 · NAICS 325 · 2017 */
+.panel .fig { font-family: var(--font-label); color: var(--color-text); }   /* a figure inside a sentence */
 
-/* Section heading: the figure frame's treatment (short UPPERCASE title, detail on a quieter line beneath) */
-.panel h3 { font-size: var(--size-h3); font-weight: var(--weight-heading); text-transform: uppercase; letter-spacing: var(--tracking-caps);
-  line-height: var(--line-tight); margin: var(--space-6) 0 var(--space-3); border-top: 1px solid var(--color-rule); padding-top: var(--space-4); }
-.panel h4 { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.06em;
-  line-height: var(--line-tight); margin: var(--space-4) 0 var(--space-2); }
-.panel .ix { font-family: var(--font-mono); font-weight: var(--weight-heading); font-size: var(--size-label); letter-spacing: 0; color: var(--color-accent);
-  margin-right: var(--space-1); }   /* K.1, K.2 ... the section's number on the instrument */
-.panel .sub { display: block; margin-top: var(--space-1); font-family: var(--font-sans); font-size: var(--size-small); font-weight: var(--weight-body);
-  text-transform: none; letter-spacing: 0; line-height: 1.35; color: var(--color-text-muted); }
-.panel .sub .fig { color: var(--color-text); }
-.page h3:first-child, .page .kpis:first-child { margin-top: var(--space-4); }
-.page h3:first-child { border-top: 0; padding-top: 0; }
+/* Figure head: "FIG K.1: TITLE" (the brand's figure head), subtitle beneath */
+.panel h3 { font-family: var(--font-sans); font-size: var(--size-h3); font-weight: var(--weight-heading); text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  line-height: var(--line-tight); margin: var(--space-6) 0 var(--space-1); border-top: var(--border); padding-top: var(--space-4); }
+.panel .ix { font-weight: var(--weight-heading); }
+.panel .subt { font-family: var(--font-sans); font-size: var(--size-small); line-height: 1.35; margin: 0 0 var(--space-3); max-width: none; }
+.panel .subt::first-letter { text-transform: uppercase; }
+.panel h4 { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  line-height: var(--line-tight); color: var(--color-text-muted); margin: var(--space-4) 0 var(--space-1); }
+.panel span.sub { font-family: var(--font-label); font-weight: var(--weight-body); text-transform: none; letter-spacing: 0; margin-left: var(--space-1); }
+.page > h3:first-child { margin-top: var(--space-4); border-top: 0; padding-top: 0; }
+.page > .kpis:first-child { margin-top: var(--space-4); }
+.kpis + h3, .gap + h3 { border-top: 0; margin-top: var(--space-4); padding-top: 0; }   /* the headline row's own rule closes it off */
 
 /* Close: a square, kit-style quiet button */
 .close { position: absolute; top: var(--space-4); right: 0; width: 32px; height: 32px; padding: 0; border: 1px solid var(--color-accent); border-radius: var(--radius);
-  background: var(--color-surface); color: var(--color-accent); font: 400 20px/1 var(--font-sans); cursor: pointer; }
+  background: transparent; color: var(--color-accent); font: 400 20px/1 var(--font-sans); cursor: pointer; }
 .close:hover { background: var(--color-highlight); }
 
-/* Page tabs: the kit's segmented control, stretched across the panel so all seven always fit; labels in mono, like a switch bank */
-.tabs { display: flex; margin: var(--space-3) 0 var(--space-2); border: 1px solid var(--color-accent); border-radius: var(--radius); }
-.tabs button { flex: 1 1 0; min-width: 0; min-height: 36px; padding: 0 var(--space-1); font: inherit; font-family: var(--font-mono); font-size: var(--size-small); font-weight: var(--weight-strong);
-  text-transform: uppercase; color: var(--color-accent); background: transparent; border: 0; cursor: pointer; }
+/* Page tabs: a row of outlined rectangles, the open page filled dark teal; all seven always fit */
+.tabs { display: flex; gap: var(--space-1); margin: var(--space-3) 0 var(--space-2); }
+.tabs button { flex: 1 1 0; min-width: 0; min-height: 34px; padding: 0 var(--space-1); font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong);
+  text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--color-accent); background: transparent; border: 1px solid var(--color-accent); border-radius: var(--radius); cursor: pointer; }
 .tabs button[data-page="Overview"] { flex: 2.4 1 0; }
-.tabs button + button { border-left: 1px solid var(--color-accent); }
 .tabs button:hover { background: var(--color-highlight); }
 .tabs button[aria-selected="true"] { background: var(--color-accent); color: var(--color-on-dark); }
 
-/* Headline numbers: a row of ruled square tiles (1px rule showing through the gaps), label above in small UPPERCASE sans, the value below in mono */
-.kpis, .gap { display: flex; flex-wrap: wrap; gap: 1px; margin: var(--space-3) 0; background: var(--color-rule); border: 1px solid var(--color-rule); }
-.kpis div, .gap div { flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--color-surface); }
-.panel .kpis span, .panel .gap span { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-heading); text-transform: uppercase; letter-spacing: 0.06em;
-  line-height: var(--line-tight); color: var(--color-text-muted); }
-.kpis b, .gap b { font-family: var(--font-mono); font-weight: var(--weight-heading); font-size: var(--size-h2); line-height: 1; letter-spacing: -0.02em; color: var(--color-accent); white-space: nowrap; }
+/* Headline numbers: the kit's headline-number style (value over a label), set between two rules instead of in boxes */
+.kpis, .gap { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin: var(--space-3) 0; padding: var(--space-3) 0;
+  border-top: var(--stroke-grid) solid var(--color-grid); border-bottom: var(--stroke-grid) solid var(--color-grid); }
+.kpis div, .gap div { display: flex; flex-direction: column; gap: var(--space-1); }
+.kpis b, .gap b { font-family: var(--font-label); font-weight: var(--weight-heading); font-size: var(--size-h2); line-height: 1; color: var(--color-accent); white-space: nowrap; }
+.panel .kpis span, .panel .gap span { font-family: var(--font-label); font-size: var(--size-label); line-height: var(--line-tight); color: var(--color-text-muted); }
 
-/* Factor bar and chips */
-.stack { display: flex; height: 20px; border: 1px solid var(--color-rule); overflow: hidden; margin: var(--space-2) 0 var(--space-3); }
+/* Factor bar: flat fills, thin #333 outline between and around; the legend is the kit's dot legend */
+.stack { display: flex; height: 24px; border: 1px solid var(--color-rule); margin: var(--space-2) 0 0; }
 .stack i { display: block; height: 100%; }
-.chip { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 0; margin-right: var(--space-2);
-  font-family: var(--font-mono); font-size: var(--size-label); font-weight: 700; }
-.chip[data-f="K"] { background: var(--k); color: var(--k-ink); } .chip[data-f="L"] { background: var(--l); color: var(--l-ink); }
-.chip[data-f="E"] { background: var(--e); color: var(--e-ink); } .chip[data-f="M"] { background: var(--m); color: var(--m-ink); }
-.chip[data-f="S"] { background: var(--s); color: var(--s-ink); } .chip[data-f="C"] { background: var(--c); color: var(--c-ink); }
+.stack i + i { border-left: 1px solid var(--color-rule); }
+.panel .fop-legend { margin: var(--space-2) 0 var(--space-3); gap: var(--space-1) var(--space-4); color: var(--color-text); }
+.ltr { display: inline-block; width: 20px; margin-right: var(--space-1); font-family: var(--font-sans); font-weight: var(--weight-strong); color: var(--color-accent); }
 
-/* Tables: small UPPERCASE sans headers over an axis-weight rule, hairline row lines, figures right-aligned in mono */
-table { width: 100%; border-collapse: collapse; font-size: var(--size-small); font-weight: var(--weight-heading); }
+/* Tables: light-mint column heads in UPPERCASE sans, hairline row rules, serif figures right-aligned */
+table { width: 100%; border-collapse: collapse; font-size: var(--size-small); font-weight: var(--weight-heading); margin: var(--space-2) 0 0; }
 td, th { padding: var(--space-1) var(--space-2); vertical-align: top; text-align: left; }
-th { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--color-text-muted); white-space: nowrap; border-bottom: var(--stroke-axis) solid var(--color-rule); }
+th { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  color: var(--color-text); background: var(--fop-light-mint); white-space: nowrap; vertical-align: bottom; border-bottom: var(--stroke-axis) solid var(--color-rule); }
 td { border-bottom: var(--stroke-grid) solid var(--color-grid); }
-td:first-child, th:first-child { padding-left: 0; }
-.num, .na { text-align: right; white-space: nowrap; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.num, .na { text-align: right; white-space: nowrap; font-variant-numeric: lining-nums tabular-nums; }
 th.num, .grid th:not(:first-child) { text-align: right; }
 .grid tr.total td { border-top: var(--stroke-axis) solid var(--color-rule); font-weight: var(--weight-strong); }
 .grid.sub td:first-child { padding-left: var(--space-4); }
+
+/* Title band: the house table's dark-teal head with a white UPPERCASE title (and an optional sentence-case line beneath) */
+caption { caption-side: top; text-align: left; padding: var(--space-2) var(--space-2); background: var(--fop-dark-teal); color: var(--color-on-dark); }
+caption b { display: block; font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: var(--tracking-caps); line-height: var(--line-tight); }
+.cap-sub { display: block; margin-top: var(--space-1); font-family: var(--font-label); font-size: var(--size-label); font-weight: var(--weight-body); line-height: var(--line-tight); }
+.panel caption .fig { color: inherit; }
+
+/* Conditional fills: only where depreciation departs from the industry's all-asset rate (see the key under the capital table) */
+td.hi { background: var(--fop-very-light-coral); }
+td.lo { background: var(--fop-very-light-mint); }
+.key { font-family: var(--font-label); font-size: var(--size-label); margin: var(--space-2) 0 var(--space-2); }
+.key span { display: inline-block; margin-right: var(--space-3); }
+.key i { display: inline-block; width: 12px; height: 12px; margin-right: var(--space-1); vertical-align: -2px; border: 1px solid var(--color-grid); }
+.key i.hi { background: var(--fop-very-light-coral); }
+.key i.lo { background: var(--fop-very-light-mint); }
 .legend tr.go { cursor: pointer; }
 .legend tr.go:hover td { background: var(--color-highlight); }
 .legend td { padding: 6px var(--space-2); }
+.legend td:first-child { padding-left: 0; }
 td.arrow { width: 16px; }
-.barcell { width: 140px; }
-.barcell i, .bar i { display: block; height: 10px; margin-top: 5px; }
+
+/* Bar tables: label, value, share, then a flat outlined bar rising from a 2px #333 axis, as in the brand's bar chart */
+.bars td { border-bottom: 0; padding-top: 3px; padding-bottom: 3px; vertical-align: middle; }
+.bars td:first-child { padding-left: 0; }
+.barcell { width: 140px; border-left: var(--stroke-axis) solid var(--color-rule); padding-left: 0; padding-right: 0; }
+.barcell i { display: block; height: 14px; border: 1px solid var(--color-rule); }
+.barcell i.z { border: 0; }   /* a zero is no bar at all */
 .bar { display: block; }
-.bar i { height: 4px; margin-top: 3px; background: var(--k); }
+.bar i { display: block; height: 5px; margin-top: 3px; border: 1px solid var(--color-rule); background: var(--k); }
 .collapsible.collapsed tr.more { display: none; }
-.toggle { margin-top: var(--space-2); min-height: 32px; padding: 0 var(--space-3); font: inherit; font-size: var(--size-small); font-weight: var(--weight-strong);
-  color: var(--color-accent); background: transparent; border: 1px solid var(--color-accent); border-radius: var(--radius); cursor: pointer; }
+.toggle { margin-top: var(--space-2); min-height: 32px; padding: 0 var(--space-3); font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-strong);
+  text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--color-accent); background: transparent; border: 1px solid var(--color-accent); border-radius: var(--radius); cursor: pointer; }
 .toggle:hover { background: var(--color-highlight); }
 .na { color: var(--color-text); }
+
+/* Context and source lines: the kit's figure-source style */
 .note, .src { font-family: var(--font-sans); font-size: var(--size-label); font-weight: var(--weight-heading); margin: var(--space-2) 0; }
+.note { color: var(--color-text); }
+.note .fig { font-family: var(--font-label); }
 .src { color: var(--color-text-muted); }
 .panel .note, .panel .src { width: 0; min-width: 100%; max-width: none; }   /* wrap to the tables' width, never widen the panel */
 .sides { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-top: var(--space-2); }
-.side-sum { font-family: var(--font-sans); font-size: var(--size-label); margin-bottom: var(--space-2); }
 .occ td:first-child { width: 60%; }
 
-/* E / M / S purchase tables */
-.ems tr.band td { font-size: var(--size-label); font-weight: var(--weight-strong); background: var(--fop-light-teal); padding-top: var(--space-2); }
-.ems tr.band td:first-child { font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.04em; }
-.ems tr.band td:first-child { padding-left: var(--space-2); }
+/* E / M / S purchase tables: the kind-of-industry rows are light-mint sub-heads, groups open to their commodities */
+.ems tr.band td { font-weight: var(--weight-strong); background: var(--fop-very-light-mint); padding-top: var(--space-2); border-bottom: var(--stroke-grid) solid var(--color-grid); }
+.ems tr.band td:first-child { padding-left: var(--space-2); font-family: var(--font-sans); font-size: var(--size-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); }
 .ems tr.grp td:first-child { padding-left: 22px; position: relative; }
 .ems tr.grp.can-open { cursor: pointer; }
-.ems tr.grp.can-open td:first-child::before { content: '+'; position: absolute; left: 8px; font-family: var(--font-mono); }
+.ems tr.grp.can-open td:first-child::before { content: '+'; position: absolute; left: 8px; font-family: var(--font-sans); }
 .ems tr.grp.can-open.open td:first-child::before { content: '−'; }
 .ems tr.grp.can-open:hover td { background: var(--color-highlight); }
 .ems tr.item td { font-size: var(--size-label); }
@@ -109,15 +131,16 @@ td.arrow { width: 16px; }
 
 /* ── Phones and narrow windows ── */
 @media (max-width: 759px) {
-  .panel { width: 100%; min-width: 0; max-width: none; overflow: visible; border-left: 0; border-top: 1px solid var(--color-rule);
+  .panel { width: 100%; min-width: 0; max-width: none; overflow: visible; border-left: 0; border-top: var(--stroke-axis) solid var(--color-rule);
     padding: 0 var(--gutter) var(--space-6); min-height: 100svh; }   /* tall enough to scroll to the top of the screen */
   .sides { grid-template-columns: 1fr; }
   .barcell { width: 72px; }
   table { font-size: var(--size-label); }
   td, th { padding: 3px var(--space-1); }
   th { white-space: normal; letter-spacing: 0; }   /* UPPERCASE headers are wider: drop the tracking so five-word tables still fit */
-  .grid.sub td:first-child { padding-left: 0; }   /* the indent costs width the mono figures now need */
+  .grid.sub td:first-child { padding-left: var(--space-1); }
   .grid td:first-child, .legend td:first-child, .ems td:first-child { overflow-wrap: break-word; }   /* break a word only if it can't fit */
+  .kpis b, .gap b { font-size: var(--size-h3); }
   /* Five-column capital tables: each asset's name on its own line, its four numbers in even columns beneath */
   .grid.wide thead tr, .grid.wide tbody tr { display: grid; grid-template-columns: repeat(4, 1fr); }
   .grid.wide th:first-child { display: none; }
@@ -127,7 +150,7 @@ td.arrow { width: 16px; }
   .grid.wide tr.total { border-top: var(--stroke-axis) solid var(--color-rule); }
   .grid.wide tr.total td { border-top: 0; }
   .grid.wide.collapsed tr.more { display: none; }
-  /* The three-column capital sub-tables restack the same way (mono figures no longer fit beside the name at 360px) */
+  /* The three-column capital sub-tables restack the same way */
   .grid.sub thead tr, .grid.sub tbody tr { display: grid; grid-template-columns: repeat(3, 1fr); }
   .grid.sub th:first-child { display: none; }
   .grid.sub tbody tr { border-bottom: var(--stroke-grid) solid var(--color-grid); padding: var(--space-1) 0; }

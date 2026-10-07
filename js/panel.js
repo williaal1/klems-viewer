@@ -1,5 +1,6 @@
 // The readout: one industry's production function as seven pages (Overview, then K L E M S C),
 // from data/readout/<code>.json. The open page carries over when you click another industry.
+// Each section is a small newsletter figure (css/panel.css): FIG index + UPPERCASE title, a sentence-case subtitle, the content, a source line.
 
 const el = document.getElementById('panel');
 const cache = new Map();
@@ -11,8 +12,10 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const money = (m) => m == null ? '–' : Math.abs(m) >= 1e6 ? `$${(m / 1e6).toFixed(2)}tn` : Math.abs(m) >= 1e3 ? `$${(m / 1e3).toFixed(1)}bn` : `$${Math.round(m)}m`;
 const pct = (x, d = 1) => x == null ? '–' : `${(100 * x).toFixed(d)}%`;
 const num = (x) => x == null ? '–' : Math.round(x).toLocaleString();
-const fig = (s) => `<span class="fig">${s}</span>`;   // a figure set inside a sentence: mono, like every number in the readout
-const ix = (s) => `<span class="ix">${s}</span> `;     // instrument index in front of a section title
+const fig = (s) => `<span class="fig">${s}</span>`;   // a figure set inside a sentence: label serif, like every number in the readout
+const ix = (s) => `<span class="ix">FIG ${s}:</span> `;   // figure index in front of a section title, as in the brand's "FIG #:" heads
+const head = (index, title, subtitle) => `<h3>${ix(index)}${title}</h3>${subtitle ? `<p class="subt">${subtitle}</p>` : ''}`;
+const band = (title, sub) => `<caption><b>${title}</b>${sub ? `<span class="cap-sub">${sub}</span>` : ''}</caption>`;   // the house table's dark-teal title band
 const wage = (x) => x == null ? '<span class="na" title="Not published: suppressed or top-coded by OEWS">n/p</span>' : `$${Math.round(x / 1000)}k`;
 
 const FACTORS = {
@@ -25,7 +28,7 @@ function bars(obj, total, color) {
   const max = Math.max(...rows.map((r) => r[1]), 1);
   return `<table class="bars">${rows.map(([k, v]) => `
     <tr><td>${esc(k)}</td><td class="num">${money(v)}</td><td class="num muted">${pct(v / total)}</td>
-    <td class="barcell"><i style="width:${(100 * v / max).toFixed(1)}%;background:${color}"></i></td></tr>`).join('')}</table>`;
+    <td class="barcell"><i${v ? '' : ' class="z"'} style="width:${(100 * v / max).toFixed(1)}%;background:${color}"></i></td></tr>`).join('')}</table>`;
 }
 
 const SRC_PA = (d) => `<p class="src">BEA-BLS Integrated Production Account, ${d.year}, current dollars. | Forces of Production</p>`;
@@ -35,18 +38,20 @@ const SRC_PA = (d) => `<p class="src">BEA-BLS Integrated Production Account, ${d
 function overview(d, meta) {
   const p = d.production, go = p.gross_output;
   const stack = 'KLEMS'.split('').map((k) => `<i style="width:${(100 * p[k] / go).toFixed(2)}%;background:${FACTORS[k][1]}" title="${k}"></i>`).join('');
-  const row = (k) => `<tr class="go" data-page="${k}"><td><b class="chip" data-f="${k}">${k}</b>${FACTORS[k][0]}</td>
+  const legend = 'KLEMS'.split('').map((k) => `<li style="--dot-color:${FACTORS[k][1]}"><span class="dot"></span>${FACTORS[k][0]}</li>`).join('');
+  const row = (k) => `<tr class="go" data-page="${k}"><td><b class="ltr">${k}</b>${FACTORS[k][0]}</td>
     <td class="num">${money(p[k])}</td><td class="num muted">${pct(p[k] / go)}</td><td class="num arrow">›</td></tr>`;
   return `
     <div class="kpis">
-      <div><span class="muted">Gross output</span><b>${money(go)}</b></div>
-      <div><span class="muted">Value added</span><b>${money(p.value_added)}</b></div>
-      <div><span class="muted">Share of all value added</span><b>${pct(p.value_added / meta.total_value_added)}</b></div>
+      <div><b>${money(go)}</b><span>Gross output</span></div>
+      <div><b>${money(p.value_added)}</b><span>Value added</span></div>
+      <div><b>${pct(p.value_added / meta.total_value_added)}</b><span>Share of all value added</span></div>
     </div>
-    <h3>${ix('OV.1')}Gross output, by what it pays for</h3>
+    ${head('OV.1', 'Gross output', `${fig(money(go))}, by what it pays for`)}
     <div class="stack">${stack}</div>
+    <ul class="fop-legend">${legend}</ul>
     <table class="legend">${'KLEMS'.split('').map(row).join('')}
-      <tr class="go" data-page="C"><td><b class="chip" data-f="C">C</b>Carbon (an output)</td><td class="num">${(d.carbon.direct_t / 1e6).toFixed(1)} Mt</td><td class="num muted">CO₂e</td><td class="num arrow">›</td></tr>
+      <tr class="go" data-page="C"><td><b class="ltr">C</b>Carbon (an output)</td><td class="num">${(d.carbon.direct_t / 1e6).toFixed(1)} Mt</td><td class="num muted">CO₂e</td><td class="num arrow">›</td></tr>
     </table>
     <p class="note">Value added = K + L. Gross output = K + L + E + M + S. Carbon is produced alongside the output, not paid for.</p>
     ${SRC_PA(d)}
@@ -56,31 +61,34 @@ function overview(d, meta) {
 function pageK(d) {
   const p = d.production, c = d.capital;
   const html = `
-    <h3>${ix('K.1')}Capital income <span class="sub">${fig(money(p.K))}, ${fig(pct(p.K / p.gross_output))} of gross output</span></h3>
+    ${head('K.1', 'Capital income', `${fig(money(p.K))}, ${fig(pct(p.K / p.gross_output))} of gross output`)}
     <h4>By type</h4>${bars(p.K_by_type, p.K, 'var(--k)')}
     <h4>By asset class</h4>${bars(p.K_by_asset_class, p.K, 'var(--k)')}
     ${SRC_PA(d)}`;
-  if (!c) return html + `<h3>${ix('K.2')}Capital stock</h3><p class="note">No asset-level capital data for this industry.</p>`;
+  if (!c) return html + `${head('K.2', 'Capital stock')}<p class="note">No asset-level capital data for this industry.</p>`;
   const order = ['Equipment', 'Structures', 'Intellectual property products', 'Rental residential capital', 'Inventories', 'Land'];
   const broad = order.map((a) => c.broad.find((b) => b.asset === a)).filter(Boolean);
   const all = c.broad.find((b) => b.asset === 'All assets');
   const bn = (x) => money(x == null ? null : x * 1e3);
+  // Depreciation is shaded only where it departs from the industry's all-asset rate by a quarter or more: coral above, mint below.
+  const ref = all.depreciation_rate;
+  const dep = (r) => `<td class="num${r == null || !ref ? '' : r >= 1.25 * ref ? ' hi' : r <= 0.75 * ref ? ' lo' : ''}">${pct(r)}</td>`;
   const brow = (b, cls = '') => `<tr class="${cls}"><td>${esc(b.asset)}</td><td class="num">${bn(b.productive_stock_bn)}</td>
-    <td class="num">${bn(b.investment_bn)}</td><td class="num">${pct(b.depreciation_rate)}</td>
+    <td class="num">${bn(b.investment_bn)}</td>${cls ? `<td class="num">${pct(b.depreciation_rate)}</td>` : dep(b.depreciation_rate)}
     <td class="num">${pct(b.share_of_capital_income)}</td></tr>`;
-  const sub = (rows, total) => `<table class="grid sub"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th></tr></thead>${rows.filter((b) => b.asset !== total).map((b) => `
-    <tr><td>${esc(b.asset)}</td><td class="num">${bn(b.productive_stock_bn)}</td><td class="num">${bn(b.investment_bn)}</td><td class="num">${pct(b.depreciation_rate)}</td></tr>`).join('')}</table>`;
+  const sub = (title, rows, total) => `<table class="grid sub">${band(title)}<thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th></tr></thead>${rows.filter((b) => b.asset !== total).map((b) => `
+    <tr><td>${esc(b.asset)}</td><td class="num">${bn(b.productive_stock_bn)}</td><td class="num">${bn(b.investment_bn)}</td>${dep(b.depreciation_rate)}</tr>`).join('')}</table>`;
   const max = c.assets[0]?.productive_stock_m || 1;
   const arow = (a, i) => `<tr class="${i >= 10 ? 'more' : ''}"><td>${esc(a.asset)}<span class="bar"><i style="width:${(100 * a.productive_stock_m / max).toFixed(1)}%"></i></span></td>
-    <td class="num">${money(a.productive_stock_m)}</td><td class="num">${money(a.investment_m)}</td><td class="num">${pct(a.depreciation_rate)}</td><td class="num">${pct(a.share_of_capital_income)}</td></tr>`;
+    <td class="num">${money(a.productive_stock_m)}</td><td class="num">${money(a.investment_m)}</td>${dep(a.depreciation_rate)}<td class="num">${pct(a.share_of_capital_income)}</td></tr>`;
   return html + `
-    <h3>${ix('K.2')}Capital stock <span class="sub">${fig(bn(all.productive_stock_bn))} productive stock</span></h3>
+    ${head('K.2', 'Capital stock', `${fig(bn(all.productive_stock_bn))} productive stock`)}
     <table class="grid wide"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
       <tbody>${broad.map((b) => brow(b)).join('')}${brow(all, 'total')}</tbody></table>
-    <h4>Information processing equipment</h4>${sub(c.information_processing, 'Total information processing equipment')}
-    <h4>Intellectual property</h4>${sub(c.intellectual_property, 'Total intellectual property products')}
-    <h4>Every asset type <span class="sub">${fig(c.assets.length)}, largest stock first</span></h4>
-    <table class="grid wide collapsible collapsed"><thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
+    <p class="key"><span><i class="hi"></i>Depreciation a quarter or more above the all-asset rate (${fig(pct(ref))})</span> <span><i class="lo"></i>a quarter or more below</span></p>
+    ${sub('Information processing equipment', c.information_processing, 'Total information processing equipment')}
+    ${sub('Intellectual property', c.intellectual_property, 'Total intellectual property products')}
+    <table class="grid wide collapsible collapsed">${band('Every asset type', `${fig(c.assets.length)}, largest stock first`)}<thead><tr><th></th><th>Stock</th><th>Investment</th><th>Depreciation</th><th>Share of K income</th></tr></thead>
       <tbody>${c.assets.map(arow).join('')}</tbody></table>
     ${c.assets.length > 10 ? `<button class="toggle" data-n="${c.assets.length}" data-top="10">Show all ${c.assets.length}</button>` : ''}
     <p class="src">BLS Total Factor Productivity, Capital Details, ${d.year}. | Forces of Production</p>`;
@@ -89,25 +97,23 @@ function pageK(d) {
 function pageL(d) {
   const p = d.production, l = d.labor;
   const html = `
-    <h3>${ix('L.1')}Labor compensation <span class="sub">${fig(money(p.L))}, ${fig(pct(p.L / p.gross_output))} of gross output</span></h3>
+    ${head('L.1', 'Labor compensation', `${fig(money(p.L))}, ${fig(pct(p.L / p.gross_output))} of gross output`)}
     <h4>By education</h4>${bars(p.L_by_education, p.L, 'var(--l)')}
     ${SRC_PA(d)}`;
-  if (!l) return html + `<h3>${ix('L.2')}Occupations</h3><p class="note">No occupation data for this industry.</p>`;
+  if (!l) return html + `${head('L.2', 'Occupations')}<p class="note">No occupation data for this industry.</p>`;
   const TOP = 15;
   const side = (title, s) => `
     <div class="side">
-      <h4>${title}</h4>
-      <div class="side-sum">${fig(num(s.employment))} jobs · mean ${fig(wage(s.mean_wage))}</div>
-      <table class="grid occ collapsible collapsed"><thead><tr><th>Occupation</th><th>Jobs</th><th>Mean wage</th></tr></thead>
+      <table class="grid occ collapsible collapsed">${band(title, `${fig(num(s.employment))} jobs · mean ${fig(wage(s.mean_wage))}`)}<thead><tr><th>Occupation</th><th>Jobs</th><th>Mean wage</th></tr></thead>
         <tbody>${s.occupations.map((o, i) => `<tr class="${i >= TOP ? 'more' : ''}"><td>${esc(o.title)}</td><td class="num">${num(o.employment)}</td><td class="num">${wage(o.mean_wage)}</td></tr>`).join('')}</tbody></table>
       ${s.occupations.length > TOP ? `<button class="toggle" data-n="${s.occupations.length}" data-top="${TOP}">Show all ${s.occupations.length}</button>` : ''}
     </div>`;
   return html + `
-    <h3>${ix('L.2')}Occupations <span class="sub">${fig(num(l.total_employment))} jobs · mean wage ${fig(wage(l.mean_wage))}</span></h3>
+    ${head('L.2', 'Occupations', `${fig(num(l.total_employment))} jobs · mean wage ${fig(wage(l.mean_wage))}`)}
     <div class="gap">
-      <div><span class="muted">OEWS wage bill</span><b>${money(l.oews_wage_bill_m)}</b></div>
-      <div><span class="muted">KLEMS labor compensation</span><b>${money(l.klems_labor_compensation_m)}</b></div>
-      <div><span class="muted">Wages cover</span><b>${pct(l.oews_wage_bill_m / l.klems_labor_compensation_m, 0)}</b></div>
+      <div><b>${money(l.oews_wage_bill_m)}</b><span>OEWS wage bill</span></div>
+      <div><b>${money(l.klems_labor_compensation_m)}</b><span>KLEMS labor compensation</span></div>
+      <div><b>${pct(l.oews_wage_bill_m / l.klems_labor_compensation_m, 0)}</b><span>Wages cover</span></div>
     </div>
     <div class="sides">${side('Supervisory', l.supervisory)}${side('Nonsupervisory', l.nonsupervisory)}</div>
     <p class="src">BLS OEWS, May ${d.year}, national industry-specific estimates. | Forces of Production</p>`;
@@ -125,13 +131,13 @@ function pageEMS(d, k) {
         ${open ? grp.items.map(([name, v]) => `<tr class="item" data-of="${id}" hidden><td>${esc(name)}</td><td class="num">${money(v)}</td><td class="num muted">${pct(v / listed)}</td></tr>`).join('') : ''}`;
     }).join('')}`).join('');
   return `
-    <h3>${ix(k + '.1')}${FACTORS[k][0]} <span class="sub">bought from other industries</span></h3>
+    ${head(k + '.1', FACTORS[k][0], 'Bought from other industries')}
     <div class="kpis">
-      <div><span class="muted">Spent</span><b>${money(p[k])}</b></div>
-      <div><span class="muted">Share of gross output</span><b>${pct(p[k] / p.gross_output)}</b></div>
-      <div><span class="muted">Share of intermediate inputs</span><b>${pct(p[k] / ii)}</b></div>
+      <div><b>${money(p[k])}</b><span>Spent</span></div>
+      <div><b>${pct(p[k] / p.gross_output)}</b><span>Share of gross output</span></div>
+      <div><b>${pct(p[k] / ii)}</b><span>Share of intermediate inputs</span></div>
     </div>
-    <table class="grid ems"><thead><tr><th>What it buys, by kind of industry that makes it</th><th>$</th><th>Share</th></tr></thead>
+    <table class="grid ems">${band('What it buys, by kind of industry that makes it')}<thead><tr><th></th><th>$</th><th>Share</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="3" class="muted">None listed.</td></tr>'}</tbody></table>
     <p class="src">BEA Use table, 2017 detail benchmark (before redefinitions, purchasers' prices). Click a group to see its detailed commodities. | Forces of Production</p>`;
 }
@@ -145,18 +151,18 @@ function pageC(d) {
   const gases = Object.fromEntries(GASES.map((g) => [g, c.by_gas_t[g] || 0]));
   const max = Math.max(c.direct_kg_per_usd, c.supply_chain_kg_per_usd);
   const per = (label, v) => `<tr><td>${label}</td><td class="num">${kg(v)}</td>
-    <td class="barcell"><i style="width:${(100 * v / max).toFixed(1)}%;background:var(--c)"></i></td></tr>`;
+    <td class="barcell"><i${v ? '' : ' class="z"'} style="width:${(100 * v / max).toFixed(1)}%;background:var(--c)"></i></td></tr>`;
   const upstream = 1 - c.direct_kg_per_usd / c.supply_chain_kg_per_usd;
   return `
-    <h3>${ix('C.1')}Carbon <span class="sub">an output, produced alongside the industry's goods and services</span></h3>
+    ${head('C.1', 'Carbon', "An output, produced alongside the industry's goods and services")}
     <div class="kpis">
-      <div><span class="muted">Direct emissions</span><b>${tonnes(c.direct_t)} CO₂e</b></div>
-      <div><span class="muted">Share of all industry emissions</span><b>${pct(c.share_of_industry_total)}</b></div>
-      <div><span class="muted">Per dollar of output</span><b>${kg(c.direct_kg_per_usd)}</b></div>
+      <div><b>${tonnes(c.direct_t)} CO₂e</b><span>Direct emissions</span></div>
+      <div><b>${pct(c.share_of_industry_total)}</b><span>Share of all industry emissions</span></div>
+      <div><b>${kg(c.direct_kg_per_usd)}</b><span>Per dollar of output</span></div>
     </div>
     <h4>By gas <span class="sub">CO₂-equivalent</span></h4>
     <table class="bars">${GASES.map((g) => `<tr><td>${g}</td><td class="num">${tonnes(gases[g])}</td><td class="num muted">${pct(c.direct_t ? gases[g] / c.direct_t : null)}</td>
-      <td class="barcell"><i style="width:${(100 * gases[g] / Math.max(...Object.values(gases), 1)).toFixed(1)}%;background:var(--c)"></i></td></tr>`).join('')}</table>
+      <td class="barcell"><i${gases[g] ? '' : ' class="z"'} style="width:${(100 * gases[g] / Math.max(...Object.values(gases), 1)).toFixed(1)}%;background:var(--c)"></i></td></tr>`).join('')}</table>
     <h4>Per dollar of output <span class="sub">kg CO₂e</span></h4>
     <table class="bars">${per('Direct, in the industry itself', c.direct_kg_per_usd)}${per('Including its supply chain', c.supply_chain_kg_per_usd)}</table>
     <p class="note">${fig(pct(upstream, 0))} of the emissions behind a dollar of this industry's output happen upstream, in the industries it buys from (at home and abroad).</p>
