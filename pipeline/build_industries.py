@@ -94,6 +94,8 @@ for code, r in w.sort_values('Value Added', ascending=False).iterrows():
         'naics_2017': None if pd.isna(naics) else str(naics),
         'naics_label': naics_label(code, None if pd.isna(naics) else str(naics)),
         'value_added': float(r['Value Added']),
+        'K': float(k[code]),   # capital compensation (same production-account sheets as the readout)
+        'L': float(l[code]),   # labor compensation
         'sector': sector(code),
         'sector_name': SECTORS[sector(code)],
     })
